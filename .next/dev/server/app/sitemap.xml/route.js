@@ -1,0 +1,13 @@
+var R=require("../../chunks/[turbopack]_runtime.js")("server/app/sitemap.xml/route.js")
+R.c("server/chunks/src_app_sitemap--route-entry_1ptev_-.js")
+R.c("server/chunks/node_modules_next_1ud9wu0._.js")
+R.c("server/chunks/node_modules_@grpc_grpc-js_0lmlvqf._.js")
+R.c("server/chunks/node_modules_protobufjs_1yqzkdc._.js")
+R.c("server/chunks/node_modules_@firebase_firestore_dist_common-a7e68754_node_mjs_084qpp5._.js")
+R.c("server/chunks/node_modules_@firebase_firestore_dist_index_node_mjs_18_1z-j._.js")
+R.c("server/chunks/node_modules_@firebase_firestore_dist_common-a7e68754_node_mjs_1eikopa._.js")
+R.c("server/chunks/node_modules_1e5anlv._.js")
+R.c("server/chunks/[root-of-the-server]__1-m3fta._.js")
+R.c("server/chunks/_next-internal_server_app_sitemap_xml_route_actions_05l5km9.js")
+R.m("[project]/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/src/app/sitemap--route-entry.js [app-route] (ecmascript)\" } [app-route] (ecmascript)")
+module.exports=R.m("[project]/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/src/app/sitemap--route-entry.js [app-route] (ecmascript)\" } [app-route] (ecmascript)").exports
