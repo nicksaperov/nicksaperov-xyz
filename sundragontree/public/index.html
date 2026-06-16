@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sun Dragon Tree | Handmade Ceramic Artifacts</title>
+    
+    <!-- Open Graph for Link Forwarding (Telegram/WhatsApp) -->
+    <meta property="og:title" content="Sun Dragon Tree | Handmade Ceramic Artifacts">
+    <meta property="og:description" content="A unique collection of handmade ceramic artifacts and items of power.">
+    <meta property="og:type" content="website">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Client Requested Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Tenor+Sans&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pearl: '#FCFBF9', 
+                        sand: '#F4F0EA',
+                        saffron: { 50: '#FDF3ED', 100: '#FBE4D7', 200: '#F6C3A9', 300: '#F09D75', 400: '#E28C5F', 500: '#D87542', 600: '#C26535', 800: '#9A4D26' },
+                        graphite: '#1f2937',
+                        night: '#1a1a1a'
+                    },
+                    fontFamily: {
+                        heading: ['"Tenor Sans"', 'sans-serif'],
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            background-color: #FCFBF9 !important; 
+            color: #1f2937 !important; 
+            letter-spacing: 0.1em; /* Air between letters */
+        }
+        .modal-enter { animation: fadein 0.3s ease-out forwards; }
+        @keyframes fadein { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Subtle image hover zoom */
+        .img-hover-zoom { transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        .group:hover .img-hover-zoom { transform: scale(1.04); }
+    </style>
+
+    <!-- 🏗️ FIREBASE SDK INTEGRATION -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCK2nTz6xHoaYPRUmUyFXpu7-l9u1Hilug",
+            authDomain: "nicksaperov-portfolio-2026.firebaseapp.com",
+            projectId: "nicksaperov-portfolio-2026",
+            storageBucket: "nicksaperov-portfolio-2026.firebasestorage.app",
+            messagingSenderId: "769848303631",
+            appId: "1:769848303631:web:d58ca6fef3b687b520c37a"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.fbDB = db;
+        window.fbGetDocs = getDocs;
+        window.fbCollection = collection;
+        window.fbQuery = query;
+        window.fbOrderBy = orderBy;
+        window.fbDoc = doc;
+        window.fbGetDoc = getDoc;
+
+        window.dispatchEvent(new Event('firebase-ready'));
+    </script>
+</head>
+<body class="bg-pearl text-graphite antialiased font-sans">
+
+    <!-- Header / Navbar -->
+    <nav class="w-full bg-pearl/90 backdrop-blur-md fixed top-0 z-40 border-b border-gray-100">
+        <div class="max-w-[1400px] mx-auto px-6 md:px-12 py-5 flex justify-between items-center text-xs uppercase tracking-[0.15em] font-sans font-semibold text-gray-500">
+            <!-- Clickable Logo routes to top of page seamlessly -->
+            <a href="#" onclick="window.scrollTo({top: 0, behavior: 'smooth'}); return false;" class="font-heading text-lg font-bold text-graphite tracking-[0.2em] hover:text-saffron-500 transition">
+                SUN <span class="text-saffron-500">DRAGON</span> TREE
+            </a>
+            
+            <div class="hidden lg:flex gap-10">
+                <a href="#collection" id="ui-nav-col" class="hover:text-saffron-500 transition">Collection</a>
+                <a href="#workshops" id="ui-nav-work" class="hover:text-saffron-500 transition">Workshops</a>
+                <a href="#about" id="ui-nav-about" class="hover:text-saffron-500 transition">About</a>
+                <a href="#contact" id="ui-nav-contact" class="hover:text-saffron-500 transition">Contact</a>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button onclick="setLang('en')" id="lang-btn-en" class="text-saffron-500 transition">EN</button>
+                <span class="text-gray-200 font-light">|</span>
+                <button onclick="setLang('ru')" id="lang-btn-ru" class="hover:text-saffron-500 transition">RU</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Minimal Centered Hero Section -->
+    <section class="min-h-[70vh] flex flex-col items-center justify-center pt-[120px] pb-20 px-6 text-center">
+        <span id="ui-hero-tag" class="text-saffron-500 text-xs font-bold uppercase tracking-[0.2em] mb-8">Handmade Stoneware Ceramics</span>
+        
+        <h1 id="ui-hero-title" class="text-5xl md:text-7xl lg:text-[6rem] font-heading text-graphite mb-8 leading-[1.1] transition-opacity duration-500 opacity-0">
+            Presence<br>in every <br><span class="text-saffron-500 italic">piece</span>
+        </h1>
+        
+        <p id="ui-hero-subtitle" class="text-lg text-gray-400 mb-8 font-light">Artifacts for tea, ritual & daily life</p>
+        
+        <p id="ui-hero-desc" class="text-gray-600 mb-12 max-w-xl mx-auto leading-[1.8] font-light text-sm transition-opacity duration-500 opacity-0"></p>
+        
+        <div class="flex flex-wrap items-center justify-center gap-6 text-xs font-bold tracking-[0.15em] uppercase">
+            <a href="#collection" class="bg-saffron-500 text-white px-8 py-4 rounded-sm hover:bg-saffron-600 transition shadow-sm" id="ui-view-col">View Collection &rarr;</a>
+            <a href="#" class="wa-contact-link text-saffron-500 hover:text-saffron-600 transition" id="ui-dm-order">DM to Order</a>
+        </div>
+    </section>
+
+    <!-- Social Follow -->
+    <section class="px-8 md:px-16 lg:px-24 py-16 bg-white border-y border-gray-100">
+        <div class="max-w-[1400px] mx-auto flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-8">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-[0.2em]" id="ui-follow">Follow</span>
+            <div class="flex gap-4">
+                <a href="https://www.instagram.com/sundragontree/" target="_blank" class="w-10 h-10 rounded-full border border-saffron-200 flex items-center justify-center text-saffron-500 hover:bg-saffron-50 transition"><i class="fa-brands fa-instagram"></i></a>
+                <a href="https://t.me/derevodrakon" target="_blank" class="w-10 h-10 rounded-full border border-saffron-200 flex items-center justify-center text-saffron-500 hover:bg-saffron-50 transition"><i class="fa-brands fa-telegram"></i></a>
+                <a href="#" target="_blank" class="wa-contact-link w-10 h-10 rounded-full border border-saffron-200 flex items-center justify-center text-saffron-500 hover:bg-saffron-50 transition"><i class="fa-brands fa-whatsapp"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Collection & Filters -->
+    <section id="collection" class="pt-24 pb-16 px-6 md:px-12 max-w-7xl mx-auto">
+        <div class="mb-16 text-center sm:text-left">
+            <div class="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                <span id="ui-collection-tag" class="text-saffron-500 text-xs font-bold uppercase tracking-[0.2em]">Collection</span>
+                <h2 id="ui-collection-title" class="text-4xl md:text-5xl font-heading text-saffron-500">Ceramic Artifacts</h2>
+            </div>
+            
+            <!-- Filters -->
+            <div id="filter-container" class="flex flex-col md:flex-row justify-between items-center sm:items-start md:items-end gap-8 mt-12 hidden">
+                <div id="category-filters" class="flex flex-wrap justify-center sm:justify-start gap-3">
+                    <!-- Filters injected via JS -->
+                </div>
+                
+                <div class="w-full md:w-auto min-w-[200px]">
+                    <select id="location-filter" onchange="setLocationFilter(this.value)" class="w-full bg-transparent border-b border-gray-300 py-2 text-xs font-bold uppercase tracking-[0.15em] text-gray-500 focus:outline-none focus:border-saffron-500 cursor-pointer transition text-center sm:text-left">
+                        <!-- Locations injected here -->
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="col-span-full text-center text-gray-400 py-12"><i class="fa-solid fa-circle-notch fa-spin text-3xl text-saffron-500 mb-4"></i><p>Syncing Collection...</p></div>
+        </div>
+    </section>
+
+    <!-- About Section Split -->
+    <section id="about" class="flex flex-col lg:flex-row border-t border-gray-200 bg-white">
+        <div class="w-full lg:w-1/2 bg-sand min-h-[400px] lg:min-h-[600px] relative overflow-hidden">
+            <!-- Master Image -->
+            <img src="/master.jpg" alt="Master at work" class="absolute inset-0 w-full h-full object-cover">
+        </div>
+        <div class="w-full lg:w-1/2 px-8 md:px-16 lg:px-24 py-24 flex flex-col justify-center">
+            <span id="ui-about-tag" class="text-graphite text-xs font-bold uppercase tracking-[0.2em] mb-6">About the Maker</span>
+            <h2 id="ui-about-title" class="text-4xl md:text-5xl font-heading text-saffron-500 mb-10 leading-[1.2]">Master who creates &<br>facilitates your process</h2>
+            <p id="ui-about-p1" class="text-gray-600 mb-6 leading-[1.8] font-light max-w-lg"></p>
+            <p id="ui-about-p2" class="text-gray-600 mb-0 leading-[1.8] font-light max-w-lg"></p>
+        </div>
+    </section>
+
+    <!-- Workshops Section Split (With Defensive Video Architecture) -->
+    <section id="workshops" class="flex flex-col lg:flex-row-reverse border-t border-gray-200 bg-white">
+        <div class="w-full lg:w-1/2 bg-graphite min-h-[400px] lg:min-h-[600px] relative overflow-hidden group">
+            <!-- Workshop Video -->
+            <video id="workshop-video" autoplay loop muted playsinline defaultMuted poster="/master.jpg" class="absolute inset-0 w-full h-full object-cover opacity-90">
+                <source src="/hero.mp4" type="video/mp4" />
+            </video>
+            <!-- Play Button Fallback (Visible only if JS detects autoplay failure) -->
+            <button id="video-fallback-btn" class="absolute inset-0 m-auto w-16 h-16 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full text-white flex items-center justify-center transition-all duration-300 opacity-0 pointer-events-none z-10">
+                <i class="fa-solid fa-play text-xl ml-1"></i>
+            </button>
+        </div>
+        <div class="w-full lg:w-1/2 px-8 md:px-16 lg:px-24 py-24 flex flex-col justify-center bg-sand">
+            <span id="ui-workshops-tag" class="text-graphite text-xs font-bold uppercase tracking-[0.2em] mb-6">Workshops</span>
+            <h2 id="ui-workshops-title" class="text-4xl md:text-5xl font-heading text-saffron-500 mb-10 leading-[1.2]">Shape your own<br>tea practice</h2>
+            <p id="ui-workshops-desc" class="text-gray-600 mb-12 leading-[1.8] font-light max-w-lg"></p>
+            <a href="#" id="ui-workshops-btn" class="wa-contact-link text-saffron-500 text-xs font-bold uppercase tracking-[0.2em] hover:text-saffron-600 transition border-b border-saffron-200 pb-2 w-max">Book a Session &rarr;</a>
+        </div>
+    </section>
+
+    <!-- Dark Footer -->
+    <footer id="contact" class="bg-night text-white pt-24 pb-12 px-8 md:px-16 lg:px-24">
+        <div class="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-16 mb-20">
+            <div>
+                <h3 class="font-heading text-2xl tracking-[0.2em] mb-6">SUN <span class="text-saffron-500">DRAGON</span> TREE</h3>
+                <p class="text-gray-400 text-sm font-light leading-[1.8] tracking-[0.1em]" id="ui-footer-desc">Handmade ceramic artifacts.</p>
+            </div>
+            
+            <div class="md:pl-12 border-t md:border-t-0 md:border-l border-gray-800 pt-8 md:pt-0">
+                <h4 id="ui-foot-nav-title" class="text-saffron-500 text-xs font-bold uppercase tracking-[0.2em] mb-8">Navigate</h4>
+                <ul class="space-y-4 text-sm text-gray-400 font-light tracking-[0.1em]">
+                    <li><a href="#collection" id="ui-foot-nav-col" class="hover:text-white transition">Collection</a></li>
+                    <li><a href="#workshops" id="ui-foot-nav-work" class="hover:text-white transition">Workshops</a></li>
+                    <li><a href="#about" id="ui-foot-nav-about" class="hover:text-white transition">About</a></li>
+                </ul>
+            </div>
+            
+            <div class="border-t md:border-t-0 md:border-l border-gray-800 pt-8 md:pt-0 md:pl-12">
+                <h4 id="ui-contact-title" class="text-saffron-500 text-xs font-bold uppercase tracking-[0.2em] mb-8">Contact</h4>
+                <ul class="space-y-4 text-sm text-gray-400 font-light tracking-[0.1em]">
+                    <li><a href="https://t.me/derevodrakon" target="_blank" class="hover:text-white transition">Telegram</a></li>
+                    <li><a href="https://www.instagram.com/sundragontree/" target="_blank" class="hover:text-white transition">Instagram</a></li>
+                    <li><a href="#" target="_blank" class="wa-contact-link hover:text-white transition">WhatsApp</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="max-w-[1400px] mx-auto border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center text-[10px] text-gray-600 uppercase tracking-[0.2em]">
+            <p>&copy; 2026 Sun Dragon Tree · Koh Phangan</p>
+            <p class="mt-4 md:mt-0">Design concept translated</p>
+        </div>
+    </footer>
+
+    <!-- Product Detail Modal -->
+    <div id="product-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-md px-4 py-8">
+        <div class="bg-pearl w-full max-w-5xl max-h-full rounded-xl shadow-2xl flex flex-col md:flex-row overflow-hidden modal-enter relative">
+            
+            <button onclick="closeModal()" class="absolute top-4 right-4 z-20 bg-black/40 hover:bg-black rounded-full w-10 h-10 flex items-center justify-center text-white transition">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Swipeable Gallery Half -->
+            <div class="w-full md:w-1/2 bg-sand aspect-square md:aspect-auto relative group">
+                <div id="modal-gallery" class="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar w-full h-full">
+                    <!-- Images injected here -->
+                </div>
+                
+                <button onclick="scrollGallery(-1)" class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-graphite w-12 h-12 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition flex items-center justify-center z-10 hidden" id="modal-nav-prev">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button onclick="scrollGallery(1)" class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-graphite w-12 h-12 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition flex items-center justify-center z-10 hidden" id="modal-nav-next">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Content Half -->
+            <div class="w-full md:w-1/2 p-6 md:p-10 overflow-y-auto hide-scrollbar flex flex-col">
+                <div class="flex justify-between items-start mb-4 gap-4">
+                    <h2 id="modal-title" class="text-3xl font-heading text-graphite leading-tight"></h2>
+                    <span id="modal-price" class="text-xl font-bold text-saffron-500 whitespace-nowrap pt-1"></span>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-3 mb-8">
+                    <span id="modal-category" class="inline-block bg-sand border border-saffron-200 text-saffron-600 text-[10px] font-bold px-3 py-1.5 uppercase tracking-[0.2em] rounded-sm"></span>
+                    <span id="modal-location" class="inline-flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]"><i class="fa-solid fa-location-dot"></i> <span></span></span>
+                </div>
+
+                <div class="space-y-6 mb-10 flex-grow">
+                    <div>
+                        <p id="ui-desc-label" class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Description</p>
+                        <p id="modal-desc" class="text-gray-600 leading-[1.8] font-light text-sm"></p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <p id="ui-material-label" class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">Material</p>
+                            <p id="modal-material" class="text-gray-600 leading-[1.8] font-light text-sm"></p>
+                        </div>
+                        <div>
+                            <p id="ui-care-label" class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2">How to Care</p>
+                            <p id="modal-care" class="text-gray-600 leading-[1.8] font-light text-sm"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Purchase Action -->
+                <button onclick="triggerPurchase()" class="w-full bg-saffron-500 text-white font-bold text-xs uppercase tracking-[0.2em] py-4 rounded-sm shadow-sm hover:bg-saffron-600 transition flex items-center justify-center gap-3">
+                    <i class="fa-brands fa-whatsapp text-lg"></i> <span id="ui-buy-btn">Purchase via WhatsApp</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Engine -->
+    <script>
+        let currentLang = 'en';
+        let liveProducts = [];
+        let liveSettings = {};
+        let activeProduct = null;
+        
+        let selectedCategories = new Set();
+        let selectedLocation = '';
+        
+        const WHATSAPP_NUMBER = "79850715943"; 
+
+        const uiDict = {
+            buyBtn: { en: "Purchase via WhatsApp", ru: "Заказать через WhatsApp" },
+            descLabel: { en: "Description / Purpose", ru: "Описание / Назначение" },
+            materialLabel: { en: "Material", ru: "Материал" },
+            careLabel: { en: "How to Care", ru: "Как заботиться" },
+            locAll: { en: "All Locations", ru: "Все локации" },
+            filterCat: { en: "Filter Categories", ru: "Фильтр категорий" },
+            filterLoc: { en: "Location", ru: "Локация" },
+            
+            heroTag: { en: "Handmade Stoneware Ceramics", ru: "Керамика Ручной Работы" },
+            heroSub: { en: "Artifacts for tea, ritual & daily life", ru: "Артефакты для чая, ритуалов и жизни" },
+            viewCol: { en: "View Collection →", ru: "Смотреть Коллекцию →" },
+            dmOrder: { en: "DM to Order", ru: "Написать для заказа" },
+            availBadge: { en: "Currently Available", ru: "В наличии" },
+            locBadge: { en: "Gongfu teapots · Koh Phangan", ru: "Чайники Гунфу · Ко Пханган" },
+            follow: { en: "Follow", ru: "Следить" },
+            colTag: { en: "Collection", ru: "Коллекция" },
+            colTitle: { en: "Ceramic Artifacts", ru: "Керамические Артефакты" },
+            
+            aboutTag: { en: "About the Maker", ru: "О Мастере" },
+            aboutTitle: { en: "Master who creates &\nfacilitates your process", ru: "Мастер, создающий\nваши процессы" },
+            aboutP1: { en: "Nearly five years building ceramic tools for presence and ritual practice — without a wheel, without shortcuts. Each piece is shaped by hand from stoneware, fired slow, finished with intention.", ru: "Около пяти лет создания керамических инструментов для практик присутствия и ритуалов — без гончарного круга, без компромиссов. Каждый предмет лепится вручную, медленно обжигается и завершается с намерением." },
+            aboutP2: { en: "Workshops available for those who want to work with clay themselves — including teapot-making masterclasses for gongfu tea practice.", ru: "Доступны мастер-классы для тех, кто хочет работать с глиной самостоятельно — включая создание чайников для практики гунфу ча." },
+            
+            workshopsTag: { en: "Workshops", ru: "Мастер-классы" },
+            workshopsTitle: { en: "Shape your own\ntea practice", ru: "Создай свою\nчайную практику" },
+            workshopsDesc: { en: "Join immersive sessions to learn hand-building techniques. From clay preparation to shaping functional teaware, discover the meditative process of ceramics.", ru: "Присоединяйтесь к погружающим сессиям ручной лепки. От подготовки глины до создания функциональной посуды — откройте для себя медитативный процесс работы с керамикой." },
+            workshopsBtn: { en: "Book a Session →", ru: "Записаться →" },
+
+            navCol: { en: "Collection", ru: "Коллекция" },
+            navWork: { en: "Workshops", ru: "Мастер-классы" },
+            navAbout: { en: "About", ru: "О Мастере" },
+            navContact: { en: "Contact", ru: "Контакты" },
+            
+            navTitle: { en: "Navigate", ru: "Навигация" },
+            contactTitle: { en: "Contact", ru: "Связь" },
+            footerDesc: { en: "Handmade ceramic artifacts.", ru: "Керамические артефакты ручной работы." },
+            catAll: { en: "ALL", ru: "ВСЕ" }
+        };
+
+        const categoryDict = {
+            "Чайник": "Teapot",
+            "Пиала": "Teacup",
+            "Лампада": "Oil lamp",
+            "Амулет": "Amulet",
+            "Окарина": "Ocarina",
+            "Чиллум": "Chillum",
+            "Трубка": "Pipe",
+            "Бабблер": "Bubbler",
+            "Секрет": "Secret"
+        };
+
+        const getCategoryText = (catStr, lang) => {
+            if (!catStr) return '';
+            const normalized = catStr.trim();
+            if (lang === 'ru') return normalized;
+            return categoryDict[normalized] || normalized;
+        };
+
+        const getLocText = (fieldData, lang) => {
+            if (!fieldData) return '';
+            if (typeof fieldData === 'string') return fieldData;
+            return fieldData[lang] || fieldData['en'] || '';
+        };
+
+        // --- FETCHING LOGIC ---
+        window.addEventListener('firebase-ready', async () => {
+            const { fbDB, fbGetDocs, fbCollection, fbQuery, fbOrderBy, fbDoc, fbGetDoc } = window;
+            
+            document.querySelectorAll('.wa-contact-link').forEach(el => {
+                el.href = `https://wa.me/${WHATSAPP_NUMBER}`;
+            });
+
+            try {
+                const settingsSnap = await fbGetDoc(fbDoc(fbDB, "settings", "storefront"));
+                if (settingsSnap.exists()) {
+                    liveSettings = settingsSnap.data();
+                }
+
+                const q = fbQuery(fbCollection(fbDB, "products"), fbOrderBy("createdAt", "desc"));
+                const querySnapshot = await fbGetDocs(q);
+                liveProducts = [];
+                querySnapshot.forEach((doc) => {
+                    liveProducts.push({ id: doc.id, ...doc.data() });
+                });
+
+                setLang('en');
+                renderFilters();
+                
+                if(liveProducts.length > 0) {
+                    document.getElementById('filter-container').classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error("Database Error:", error);
+                document.getElementById('product-grid').innerHTML = `<p class="text-red-500 col-span-full text-center">Failed to load inventory.</p>`;
+            }
+        });
+
+        // --- RENDER LOGIC ---
+        function setLang(lang) {
+            currentLang = lang;
+            
+            document.getElementById('lang-btn-en').className = lang === 'en' ? 'text-saffron-500 font-bold transition' : 'text-gray-400 hover:text-saffron-500 transition';
+            document.getElementById('lang-btn-ru').className = lang === 'ru' ? 'text-saffron-500 font-bold transition' : 'text-gray-400 hover:text-saffron-500 transition';
+
+            const titleEl = document.getElementById('ui-hero-title');
+            const descEl = document.getElementById('ui-hero-desc');
+            
+            const defaultTitleEn = 'Presence<br>in every <br><span class="text-saffron-500 italic">piece</span>';
+            const defaultTitleRu = 'Присутствие<br>в каждом <br><span class="text-saffron-500 italic">предмете</span>';
+            
+            titleEl.innerHTML = lang === 'en' ? (liveSettings.heroTitleEn || defaultTitleEn) : (liveSettings.heroTitleRu || defaultTitleRu);
+            descEl.innerText = lang === 'en' ? (liveSettings.heroDescEn || uiDict.aboutP1.en) : (liveSettings.heroDescRu || uiDict.aboutP1.ru);
+            
+            titleEl.style.opacity = 1;
+            descEl.style.opacity = 1;
+
+            document.getElementById('ui-nav-col').innerText = uiDict.navCol[lang];
+            document.getElementById('ui-nav-work').innerText = uiDict.navWork[lang];
+            document.getElementById('ui-nav-about').innerText = uiDict.navAbout[lang];
+            document.getElementById('ui-nav-contact').innerText = uiDict.navContact[lang];
+
+            document.getElementById('ui-foot-nav-col').innerText = uiDict.navCol[lang];
+            document.getElementById('ui-foot-nav-work').innerText = uiDict.navWork[lang];
+            document.getElementById('ui-foot-nav-about').innerText = uiDict.navAbout[lang];
+
+            document.getElementById('ui-buy-btn').innerText = uiDict.buyBtn[lang];
+            document.getElementById('ui-desc-label').innerText = uiDict.descLabel[lang];
+            document.getElementById('ui-material-label').innerText = uiDict.materialLabel[lang];
+            document.getElementById('ui-care-label').innerText = uiDict.careLabel[lang];
+            
+            document.getElementById('ui-hero-tag').innerText = uiDict.heroTag[lang];
+            document.getElementById('ui-hero-subtitle').innerText = uiDict.heroSub[lang];
+            document.getElementById('ui-view-col').innerText = uiDict.viewCol[lang];
+            document.getElementById('ui-dm-order').innerText = uiDict.dmOrder[lang];
+            document.getElementById('ui-follow').innerText = uiDict.follow[lang];
+            
+            document.getElementById('ui-collection-tag').innerText = uiDict.colTag[lang];
+            document.getElementById('ui-collection-title').innerText = uiDict.colTitle[lang];
+            
+            document.getElementById('ui-about-tag').innerText = uiDict.aboutTag[lang];
+            document.getElementById('ui-about-title').innerHTML = uiDict.aboutTitle[lang].replace('\n', '<br>');
+            document.getElementById('ui-about-p1').innerText = uiDict.aboutP1[lang];
+            document.getElementById('ui-about-p2').innerText = uiDict.aboutP2[lang];
+            
+            document.getElementById('ui-workshops-tag').innerText = uiDict.workshopsTag[lang];
+            document.getElementById('ui-workshops-title').innerHTML = uiDict.workshopsTitle[lang].replace('\n', '<br>');
+            document.getElementById('ui-workshops-desc').innerText = uiDict.workshopsDesc[lang];
+            document.getElementById('ui-workshops-btn').innerText = uiDict.workshopsBtn[lang];
+
+            document.getElementById('ui-foot-nav-title').innerText = uiDict.navTitle[lang];
+            document.getElementById('ui-contact-title').innerText = uiDict.contactTitle[lang];
+            document.getElementById('ui-footer-desc').innerHTML = uiDict.footerDesc[lang];
+
+            renderFilters();
+            renderGrid();
+            
+            if (activeProduct) openModal(activeProduct.id); 
+        }
+
+        // --- FILTER LOGIC ---
+        function renderFilters() {
+            const cats = [...new Set(liveProducts.map(p => p.category).filter(c => c && c !== "Uncategorized"))].sort();
+            const locs = [...new Set(liveProducts.map(p => p.location).filter(l => l && l !== "Unspecified"))].sort();
+
+            let catHtml = `<button onclick="toggleCategory('')" class="px-5 py-2 text-xs font-bold uppercase tracking-widest transition border rounded-sm shadow-sm ${selectedCategories.size === 0 ? 'bg-saffron-500 text-white border-saffron-500' : 'bg-white text-gray-500 border-gray-200 hover:border-saffron-300'}">${uiDict.catAll[currentLang]}</button>`;
+
+            cats.forEach(c => {
+                const dispCat = getCategoryText(c, currentLang);
+                const isSelected = selectedCategories.has(c);
+                catHtml += `<button onclick="toggleCategory('${c}')" class="px-5 py-2 text-xs font-bold uppercase tracking-widest transition border rounded-sm shadow-sm ${isSelected ? 'bg-saffron-500 text-white border-saffron-500' : 'bg-white text-gray-500 border-gray-200 hover:border-saffron-300'}">${dispCat}</button>`;
+            });
+
+            const locHtml = `<option value="">${uiDict.locAll[currentLang]}</option>` + locs.map(l => `
+                <option value="${l}" ${selectedLocation === l ? 'selected' : ''}>${l}</option>
+            `).join('');
+
+            document.getElementById('category-filters').innerHTML = catHtml;
+            document.getElementById('location-filter').innerHTML = locHtml;
+        }
+
+        window.toggleCategory = (cat) => {
+            if (cat === '') {
+                selectedCategories.clear();
+            } else {
+                if (selectedCategories.has(cat)) selectedCategories.delete(cat);
+                else selectedCategories.add(cat);
+            }
+            renderFilters();
+            renderGrid();
+        };
+
+        window.setLocationFilter = (loc) => {
+            selectedLocation = loc;
+            renderGrid();
+        };
+
+        function renderGrid() {
+            const grid = document.getElementById('product-grid');
+            
+            let filteredProducts = liveProducts;
+            if (selectedCategories.size > 0) {
+                filteredProducts = filteredProducts.filter(p => selectedCategories.has(p.category));
+            }
+            if (selectedLocation) {
+                filteredProducts = filteredProducts.filter(p => p.location === selectedLocation);
+            }
+
+            if (filteredProducts.length === 0) {
+                grid.innerHTML = '<p class="col-span-full text-center text-gray-400 font-light py-12">No artifacts match your selected filters.</p>';
+                return;
+            }
+
+            grid.innerHTML = filteredProducts.map(p => {
+                const title = getLocText(p.title, currentLang);
+                const shortDesc = getLocText(p.whatIsThisFor, currentLang);
+                const dispCat = getCategoryText(p.category, currentLang);
+                
+                const defaultImage = (p.images && p.images.length > 0) ? p.images[0].url : p.imageUrl;
+                
+                const imagesHtml = (p.images && p.images.length > 0) 
+                    ? p.images.map(img => `<img src="${img.url}" alt="${title}" class="w-full h-full object-cover flex-shrink-0 snap-center img-hover-zoom" loading="lazy">`).join('')
+                    : `<img src="${defaultImage}" alt="${title}" class="w-full h-full object-cover flex-shrink-0 snap-center img-hover-zoom" loading="lazy">`;
+
+                return `
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col group cursor-pointer" onclick="openModal('${p.id}')">
+                    <div class="w-full aspect-square bg-sand overflow-hidden relative">
+                        <div class="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar w-full h-full" onclick="event.stopPropagation()">
+                            ${imagesHtml}
+                        </div>
+                        
+                        ${(p.images && p.images.length > 1) ? `<div class="absolute bottom-3 right-3 bg-white/90 backdrop-blur text-graphite text-[10px] tracking-widest font-bold px-3 py-1 rounded-full shadow-sm"><i class="fa-solid fa-images mr-1 text-saffron-500"></i> ${p.images.length}</div>` : ''}
+                        ${(!p.location || p.location === 'Unspecified') ? `<span class="absolute top-3 left-3 bg-graphite/90 backdrop-blur text-white text-[10px] tracking-widest font-bold px-3 py-1 rounded-full shadow-sm">SOLD</span>` : ''}
+                    </div>
+                    
+                    <div class="p-6 flex-grow flex flex-col">
+                        <div class="flex justify-between items-start mb-2 gap-4">
+                            <h3 class="text-xl font-heading text-graphite leading-snug group-hover:text-saffron-500 transition line-clamp-1">${title}</h3>
+                            <span class="font-sans font-bold text-saffron-500 whitespace-nowrap mt-1">${p.price}</span>
+                        </div>
+                        <p class="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold mb-3">${dispCat}</p>
+                        <p class="text-sm text-gray-500 line-clamp-2 leading-[1.8] font-light mb-4 flex-grow">${shortDesc}</p>
+                        
+                        ${p.location && p.location !== 'Unspecified' ? `<div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest pt-3 border-t border-gray-100 mt-auto"><i class="fa-solid fa-location-dot text-saffron-400 mr-1"></i> ${p.location}</div>` : ''}
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        // --- MODAL LOGIC ---
+        window.openModal = (id) => {
+            activeProduct = liveProducts.find(p => p.id === id);
+            if (!activeProduct) return;
+
+            document.getElementById('modal-title').innerText = getLocText(activeProduct.title, currentLang);
+            document.getElementById('modal-price').innerText = activeProduct.price;
+            document.getElementById('modal-category').innerText = getCategoryText(activeProduct.category, currentLang);
+            
+            const locEl = document.getElementById('modal-location');
+            if (activeProduct.location && activeProduct.location !== 'Unspecified') {
+                locEl.style.display = 'inline-flex';
+                locEl.querySelector('span').innerText = activeProduct.location;
+            } else {
+                locEl.style.display = 'none';
+            }
+            
+            document.getElementById('modal-desc').innerText = getLocText(activeProduct.whatIsThisFor, currentLang);
+            document.getElementById('modal-material').innerText = getLocText(activeProduct.material, currentLang);
+            document.getElementById('modal-care').innerText = getLocText(activeProduct.howToUse, currentLang);
+            
+            const gallery = document.getElementById('modal-gallery');
+            const images = (activeProduct.images && activeProduct.images.length > 0) ? activeProduct.images : [{url: activeProduct.imageUrl}];
+            gallery.innerHTML = images.map(img => `<img src="${img.url}" class="w-full h-full object-cover flex-shrink-0 snap-center">`).join('');
+            
+            gallery.scrollLeft = 0;
+
+            document.getElementById('modal-nav-prev').style.display = images.length > 1 ? 'flex' : 'none';
+            document.getElementById('modal-nav-next').style.display = images.length > 1 ? 'flex' : 'none';
+
+            const modal = document.getElementById('product-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.scrollGallery = (dir) => {
+            const gallery = document.getElementById('modal-gallery');
+            const scrollAmount = gallery.clientWidth * dir;
+            gallery.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+        };
+
+        window.closeModal = () => {
+            const modal = document.getElementById('product-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+            activeProduct = null;
+        };
+
+        document.getElementById('product-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // --- PURCHASE LOGIC ---
+        window.triggerPurchase = () => {
+            if (!activeProduct) return;
+            const title = getLocText(activeProduct.title, currentLang);
+            
+            const messageEn = `Hello! I would like to purchase the artifact: "${title}" (${activeProduct.price}). Shipping to: [Enter Country]`;
+            const messageRu = `Здравствуйте! Я хочу приобрести: "${title}" (${activeProduct.price}). Доставка в: [Ваша Страна]`;
+            
+            const text = currentLang === 'en' ? messageEn : messageRu;
+            const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+            
+            window.open(url, '_blank');
+        };
+
+        // --- VIDEO AUTOPLAY FALLBACK LOGIC ---
+        window.addEventListener('DOMContentLoaded', () => {
+            const video = document.getElementById('workshop-video');
+            const playBtn = document.getElementById('video-fallback-btn');
+            
+            if (video) {
+                // Explicitly set muted via JS (fixes strict browser policies)
+                video.muted = true;
+                video.setAttribute('muted', '');
+                
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.warn("Browser blocked autoplay. Displaying fallback play button.", error);
+                        // Show the play button fallback
+                        playBtn.classList.remove('opacity-0', 'pointer-events-none');
+                        playBtn.classList.add('opacity-100', 'pointer-events-auto', 'cursor-pointer');
+                    });
+                }
+
+                // Handle manual play override
+                playBtn.addEventListener('click', () => {
+                    video.play();
+                    playBtn.classList.add('opacity-0', 'pointer-events-none');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

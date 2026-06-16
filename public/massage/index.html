@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roman Romanov | Massage Therapy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        zen: {
+                            50: '#ffffff', // Pure white
+                            100: '#fafafa', // Extremely subtle off-white for section contrast
+                            200: '#f4f4f5', // Soft borders
+                            300: '#e4e4e7',
+                            500: '#71717a', // Muted text
+                            800: '#3f3f46', // Standard text
+                            900: '#18181b', // Deep almost-black for headings
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Helvetica Neue', 'Arial', 'sans-serif'],
+                        serif: ['Georgia', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #ffffff; color: #18181b; scroll-behavior: smooth; }
+        .glass-nav { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .fade-in { animation: fadeIn 0.8s ease-in-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function App() {
+            const [lang, setLang] = useState('ru');
+            const [isScrolled, setIsScrolled] = useState(false);
+
+            useEffect(() => {
+                const handleScroll = () => setIsScrolled(window.scrollY > 50);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            const t = (ruText, enText) => lang === 'ru' ? ruText : enText;
+
+            const navLinks = [
+                { id: 'about', labelRu: 'Массаж', labelEn: 'The Practice' },
+                { id: 'services', labelRu: 'Услуги', labelEn: 'Services' },
+                { id: 'gallery', labelRu: 'Галерея', labelEn: 'Gallery' },
+                { id: 'contact', labelRu: 'Контакты', labelEn: 'Contact' }
+            ];
+
+            const services = [
+                {
+                    id: 1,
+                    titleRu: "Глубокая перезагрузка (Разовая сессия)",
+                    titleEn: "Deep Reset (Single Session)",
+                    descRu: "Полные 90 минут мануальной терапии. Сочетание тайских растяжек и японской техники Юмейхо. Проводится в удобной одежде на татами. Идеально для снятия острых блоков и стресса.",
+                    descEn: "A full 90 minutes of manual therapy combining Thai stretching and Japanese Yumeiho techniques. Performed in comfortable clothing on a tatami. Ideal for acute blockages and stress relief.",
+                    priceRu: "По запросу",
+                    priceEn: "Upon Request"
+                },
+                {
+                    id: 2,
+                    titleRu: "Курс восстановления (5 сеансов)",
+                    titleEn: "Recovery Course (5 Sessions)",
+                    descRu: "Базовый курс для системной работы с осанкой, зажимами и хронической усталостью. Позволяет закрепить результат и перестроить мышечную память.",
+                    descEn: "A core framework for systematic work with posture, tension, and chronic fatigue. Solidifies results and reconstructs muscle memory.",
+                    priceRu: "Скидка 10%",
+                    priceEn: "10% Discount"
+                },
+                {
+                    id: 3,
+                    titleRu: "Трансформация тела (Курс 10 сеансов)",
+                    titleEn: "Body Transformation (10 Sessions)",
+                    descRu: "Полный терапевтический цикл. Глубокая коррекция таза, позвоночника и суставов. Полное обновление биомеханики тела.",
+                    descEn: "The complete therapeutic cycle. Deep correction of the pelvis, spine, and joints. A total renewal of body biomechanics.",
+                    priceRu: "Спецпредложение",
+                    priceEn: "Special Offer"
+                }
+            ];
+
+            // 8 images for the gallery (excluding image6 which is used in the About section)
+            const galleryImages = [
+                './images/image1.jpg',
+                './images/image2.jpg',
+                './images/image3.jpg',
+                './images/image4.jpg',
+                './images/image5.jpg',
+                './images/image7.jpg',
+                './images/image8.jpg',
+                './images/image9.jpg'
+            ];
+
+            return (
+                <div className="font-sans antialiased bg-white">
+                    {/* Navigation */}
+                    <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'glass-nav border-b border-zen-200 py-3 shadow-sm' : 'bg-transparent py-5'}`}>
+                        <div className="max-w-6xl mx-auto px-6 flex justify-between items-center">
+                            <div className="font-serif text-2xl font-bold tracking-tight text-zen-900">
+                                ROMAN<span className="text-zen-300">OV</span>
+                            </div>
+                            
+                            <div className="hidden md:flex gap-8 items-center font-medium text-sm text-zen-800 tracking-wide uppercase">
+                                {navLinks.map(link => (
+                                    <a key={link.id} href={`#${link.id}`} className="hover:text-zen-500 transition-colors">
+                                        {t(link.labelRu, link.labelEn)}
+                                    </a>
+                                ))}
+                            </div>
+
+                            <button onClick={() => setLang(lang === 'ru' ? 'en' : 'ru')} className="px-3 py-1 border border-zen-300 rounded hover:bg-zen-100 transition-colors text-xs font-bold uppercase tracking-wider text-zen-800">
+                                {lang === 'ru' ? 'EN' : 'RU'}
+                            </button>
+                        </div>
+                    </nav>
+
+                    {/* Hero Section */}
+                    <header className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden bg-white">
+                        {/* Soft ambient background element */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-zen-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+                        
+                        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center fade-in">
+                            <h1 className="font-serif text-5xl md:text-7xl font-bold text-zen-900 mb-6 leading-tight">
+                                {t('Искусство баланса и восстановления.', 'The Art of Balance and Recovery.')}
+                            </h1>
+                            <p className="text-lg md:text-xl text-zen-500 mb-10 max-w-2xl mx-auto leading-relaxed">
+                                {t(
+                                    'Синтез традиционного тайского массажа и японской мануальной терапии Юмейхо. 90 минут глубокой работы с телом в комфортной одежде.',
+                                    'A synthesis of traditional Thai massage and Japanese Yumeiho manual therapy. 90 minutes of deep bodywork performed in comfortable clothing.'
+                                )}
+                            </p>
+                            <a href="https://t.me/Roma_n_Romanov" target="_blank" rel="noreferrer" className="inline-flex items-center gap-3 px-8 py-4 bg-zen-900 text-white hover:bg-zen-800 rounded transition-colors text-sm font-bold uppercase tracking-widest shadow-lg">
+                                <i className="fa-brands fa-telegram text-lg"></i> {t('Записаться', 'Book a Session')}
+                            </a>
+                        </div>
+                    </header>
+
+                    {/* Knowledge Base / The Practice */}
+                    <section id="about" className="py-24 bg-zen-100">
+                        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
+                            <div>
+                                <h2 className="font-serif text-3xl md:text-4xl font-bold text-zen-900 mb-6">
+                                    {t('Больше, чем просто массаж.', 'More than just a massage.')}
+                                </h2>
+                                <div className="space-y-4 text-zen-800 leading-relaxed">
+                                    <p>
+                                        {t(
+                                            'Моя практика базируется на японской терапии Юмейхо (Yumeiho) — методике исправления биомеханики тела и восстановления центра тяжести.',
+                                            'My practice is rooted in Japanese Yumeiho therapy—a method of correcting body biomechanics and restoring your natural center of gravity.'
+                                        )}
+                                    </p>
+                                    <p>
+                                        {t(
+                                            'В отличие от классического масляного массажа, сеанс проходит на татами. Клиент находится в удобной хлопковой одежде (кимоно). Техника включает глубокое разминание мышц, суставную мобилизацию и элементы пассивной йоги (тайские растяжки).',
+                                            'Unlike classical oil massages, the session takes place on a tatami mat. The client remains fully clothed in comfortable cotton wear (kimono). The technique includes deep tissue kneading, joint mobilization, and elements of passive yoga (Thai stretching).'
+                                        )}
+                                    </p>
+                                    <p className="font-medium mt-4 border-l-2 border-zen-300 pl-4 text-zen-900">
+                                        {t(
+                                            'Результат: устранение перекосов таза, снятие хронических болей в спине и полная перезагрузка нервной системы за 90 минут.',
+                                            'The result: elimination of pelvic imbalances, relief from chronic back pain, and a complete reset of the nervous system in 90 minutes.'
+                                        )}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-center relative overflow-hidden">
+                                <img 
+                                    src="./images/image6.jpg" 
+                                    alt="Yumeiho Therapy Process" 
+                                    className="w-full h-auto rounded-2xl shadow-sm border border-zen-200 object-cover"
+                                />
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Services / Tiers */}
+                    <section id="services" className="py-24 bg-white border-t border-b border-zen-100">
+                        <div className="max-w-6xl mx-auto px-6">
+                            <div className="text-center mb-16">
+                                <h2 className="font-serif text-3xl md:text-4xl font-bold text-zen-900 mb-4">
+                                    {t('Форматы работы', 'Service Tiers')}
+                                </h2>
+                                <p className="text-zen-500 max-w-2xl mx-auto">
+                                    {t('Инвестиции в ваше здоровье и биомеханику.', 'Investments in your health and biomechanics.')}
+                                </p>
+                            </div>
+
+                            <div className="grid md:grid-cols-3 gap-8">
+                                {services.map(srv => (
+                                    <div key={srv.id} className="bg-white p-8 rounded-xl border border-zen-200 hover:shadow-xl hover:border-zen-300 transition-all flex flex-col">
+                                        <h3 className="font-serif text-xl font-bold text-zen-900 mb-2">{t(srv.titleRu, srv.titleEn)}</h3>
+                                        <div className="text-zen-500 text-sm font-bold uppercase tracking-wider mb-6 pb-4 border-b border-zen-100">
+                                            {t(srv.priceRu, srv.priceEn)}
+                                        </div>
+                                        <p className="text-zen-800 text-sm leading-relaxed mb-8 flex-grow">
+                                            {t(srv.descRu, srv.descEn)}
+                                        </p>
+                                        <a href="https://t.me/Roma_n_Romanov" target="_blank" rel="noreferrer" className="block w-full py-3 text-center border border-zen-900 text-zen-900 hover:bg-zen-900 hover:text-white rounded transition-colors text-xs font-bold uppercase tracking-wider">
+                                            {t('Выбрать', 'Select')}
+                                        </a>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Gallery Section */}
+                    <section id="gallery" className="py-24 bg-zen-50">
+                        <div className="max-w-6xl mx-auto px-6">
+                            <h2 className="font-serif text-3xl md:text-4xl font-bold text-zen-900 mb-12 text-center">
+                                {t('Процесс', 'The Gallery')}
+                            </h2>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                {galleryImages.map((src, i) => (
+                                    <div key={i} className="bg-white aspect-square rounded-lg flex items-center justify-center overflow-hidden border border-zen-200 hover:shadow-md transition-shadow">
+                                        <img 
+                                            src={src} 
+                                            alt={`Massage Process ${i+1}`} 
+                                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="text-center mt-12">
+                                <a href="https://vk.ru/yumeihoterapia" target="_blank" rel="noreferrer" className="inline-block text-sm text-zen-800 hover:text-zen-500 transition-colors border-b border-zen-300 pb-1 mr-6 font-bold uppercase tracking-wider">
+                                    <i className="fa-brands fa-vk mr-2 text-lg"></i>VKontakte
+                                </a>
+                                <a href="https://instagram.com/roman_o_vech" target="_blank" rel="noreferrer" className="inline-block text-sm text-zen-800 hover:text-zen-500 transition-colors border-b border-zen-300 pb-1 font-bold uppercase tracking-wider">
+                                    <i className="fa-brands fa-instagram mr-2 text-lg"></i>Instagram
+                                </a>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Contact & Footer */}
+                    <footer id="contact" className="bg-white border-t border-zen-200 py-20">
+                        <div className="max-w-6xl mx-auto px-6 text-center">
+                            <h2 className="font-serif text-3xl font-bold text-zen-900 mb-6">
+                                {t('Готовы к сеансу?', 'Ready for your session?')}
+                            </h2>
+                            <p className="text-zen-500 mb-10 max-w-lg mx-auto">
+                                {t('Прием ведется по предварительной записи в Москве. Напишите мне в Telegram для согласования времени.', 'Appointments are by prior arrangement in Moscow. Send me a message on Telegram to schedule your time.')}
+                            </p>
+                            
+                            <a href="https://t.me/Roma_n_Romanov" target="_blank" rel="noreferrer" className="inline-flex items-center gap-3 px-8 py-4 bg-zen-900 text-white hover:bg-zen-800 rounded transition-colors text-sm font-bold uppercase tracking-widest mb-16 shadow-lg">
+                                <i className="fa-brands fa-telegram text-xl"></i> @Roma_n_Romanov
+                            </a>
+
+                            <div className="border-t border-zen-100 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-zen-500 font-mono">
+                                <div>&copy; {new Date().getFullYear()} Roman Romanov Therapy.</div>
+                                <div>Crafted by nicksaperov.xyz</div>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nick Saperov | Secure Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                            950: '#082f49',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #020617; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .gradient-text { background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-8">
+
+    <div class="max-w-xl w-full glass-panel rounded-2xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+        <!-- Decorative Background Glow -->
+        <div class="absolute -top-24 -right-24 w-48 h-48 bg-brand-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+        <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-600 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
+
+        <div class="relative z-10">
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="p-2 bg-brand-500/10 rounded-lg border border-brand-500/20">
+                    <i data-lucide="network" class="w-6 h-6 text-brand-400"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight">Initiate <span class="gradient-text">Secure Link</span></h1>
+            </div>
+
+            <p class="text-slate-400 text-sm mb-8 leading-relaxed">
+                Bypass traditional email silos. Ping my centralized Google Workspace terminal directly. I review architectural propositions, B2B middleware inquiries, and technical PM roles daily.
+            </p>
+
+            <form id="connectForm" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Google Workspace / Primary Email</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="mail" class="w-4 h-4 text-slate-500"></i>
+                        </div>
+                        <input type="email" id="email" required placeholder="architect@company.com" 
+                            class="w-full bg-slate-900/50 border border-slate-700 rounded-lg py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors placeholder-slate-600">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Engagement Type</label>
+                    <div class="relative">
+                        <select id="type" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg py-3 px-4 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors appearance-none text-slate-200">
+                            <option value="Technical PM Role">Technical PM / Product Leadership</option>
+                            <option value="Solutions Architecture">Enterprise Solutions Architecture</option>
+                            <option value="Web3/AI Audit">Web3 / AI Systems Audit</option>
+                            <option value="Other">Other Proposition</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-500"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Transmission Payload (Details)</label>
+                    <textarea id="payload" required rows="3" placeholder="Briefly define the scope, tech stack, or operational challenge..." 
+                        class="w-full bg-slate-900/50 border border-slate-700 rounded-lg py-3 px-4 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors placeholder-slate-600 resize-none"></textarea>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 border border-brand-400/30 hover:shadow-[0_0_15px_rgba(14,165,233,0.3)]">
+                    <span>Transmit to Hub</span>
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
+            </form>
+
+            <!-- Success State (Hidden by default) -->
+            <div id="successState" class="hidden mt-6 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-center">
+                <div class="mx-auto w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center mb-3">
+                    <i data-lucide="check" class="w-5 h-5 text-emerald-400"></i>
+                </div>
+                <h3 class="text-emerald-400 font-medium mb-1">Transmission Successful</h3>
+                <p class="text-slate-400 text-sm">Payload delivered to main terminal. Expect a direct Google Chat initiation shortly.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        document.getElementById('connectForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const originalText = btn.innerHTML;
+            
+            // UI Loading State
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Routing to Workspace...</span>`;
+            lucide.createIcons();
+            btn.disabled = true;
+
+            const email = document.getElementById('email').value;
+            const type = document.getElementById('type').value;
+            const payload = document.getElementById('payload').value;
+
+            // Using the current Google Apps Script ID from your working deployment
+            const googleAppsScriptURL = "https://script.google.com/macros/s/AKfycbxioBz0Gnuvb5_raX2EdSIXdJHnqzr0Jz_A79Zg7XKiX9gfnyfTuzc4p1HewsTPLcMs/exec"; 
+
+            try {
+                // Production Fetch Logic: Bypassing CORS Preflight with text/plain
+                await fetch(googleAppsScriptURL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    headers: { 
+                        'Content-Type': 'text/plain;charset=utf-8' 
+                    },
+                    body: JSON.stringify({ email, type, payload })
+                });
+
+                // Show Success
+                document.getElementById('connectForm').classList.add('hidden');
+                document.getElementById('successState').classList.remove('hidden');
+            } catch (error) {
+                console.error("Transmission Error:", error);
+                alert("Routing failed. Please email directly.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                lucide.createIcons();
+            }
+        });
+    </script>
+</body>
+</html>

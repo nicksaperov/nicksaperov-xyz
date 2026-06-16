@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquidity Evaporator | Квантовая Инфраструктура</title>
+    
+    <!-- Zero-Build Mandate: React, Tailwind, MathJax -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- MathJax for rendering LaTeX formulas in the pitches and KB -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false // We will trigger typesetting manually in React
+            }
+        };
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body { 
+            background-color: #050505; 
+            color: #e5e5e5; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .quant-grid {
+            background-image: linear-gradient(to right, #111 1px, transparent 1px), linear-gradient(to bottom, #111 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .glow-text {
+            text-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
+        }
+        
+        /* Markdown/MathJax Styling */
+        .markdown-content h2 { color: #4ade80; font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; font-family: monospace;}
+        .markdown-content p { color: #9ca3af; line-height: 1.7; margin-bottom: 1.5rem; }
+        .markdown-content strong { color: #e5e5e5; }
+        
+        /* Custom styling for KB entries */
+        .formula-box {
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            background-color: rgba(96, 165, 250, 0.05); /* text-quant-blue tint */
+            padding: 1rem;
+            border-left: 3px solid #60a5fa;
+            border-radius: 0.25rem;
+        }
+        .meta-list { margin-top: 1rem; list-style-type: disc; padding-left: 1.25rem; color: #d1d5db;}
+        .meta-list li { margin-bottom: 0.5rem; }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        quant: {
+                            black: '#050505',
+                            dark: '#0a0a0a',
+                            border: '#1f2937',
+                            green: '#4ade80',
+                            blue: '#60a5fa'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="quant-grid">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- NATIVE ICON COMPONENT ---
+        const Icon = ({ name, className }) => {
+            const getIconPath = () => {
+                switch(name) {
+                    case 'Cpu': return <><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></>;
+                    case 'Zap': return <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>;
+                    case 'BrainCircuit': return <><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-5.262 4.116 5.001 5.001 0 0 0 3.824 5.922 4.002 4.002 0 0 0 3.031 3.255 4 4 0 0 0 6.808 0 4.002 4.002 0 0 0 3.031-3.255 5.001 5.001 0 0 0 3.824-5.922 4 4 0 0 0-5.262-4.116A3 3 0 1 0 12 5Z"></path><path d="M12 13V20"></path><path d="M12 13L8 9"></path><path d="M12 13L16 9"></path></>;
+                    case 'ShieldCheck': return <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></>;
+                    case 'CheckCircle2': return <><circle cx="12" cy="12" r="10"></circle><path d="M9 12l2 2 4-4"></path></>;
+                    case 'ArrowLeft': return <><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></>;
+                    case 'BookOpen': return <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></>;
+                    case 'Globe': return <><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></>;
+                    default: return null;
+                }
+            };
+            return (
+                <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    {getIconPath()}
+                </svg>
+            );
+        };
+
+        // --- LANGUAGE DATA ---
+        const TRANSLATIONS = {
+            en: {
+                nav: {
+                    title: "LIQUIDITY",
+                    subtitle: "EVAPORATOR",
+                    architecture: "Architecture",
+                    pitch: "Narrative Strategy",
+                    kb: "Access KB"
+                },
+                hero: {
+                    badge: "v3.10.0-TEE-SOLVER DEPLOYED",
+                    title1: "Sub-Millisecond On-Chain",
+                    title2: "Alpha Extraction.",
+                    description: "A high-frequency cryptographic intent solver. We exploit transient liquidity vacuums via predictive neural networks, Zero-Knowledge proofs, and Just-In-Time (JIT) execution.",
+                    btnArch: "Review Architecture",
+                    btnKb: "Public KB"
+                },
+                architecture: {
+                    jit: {
+                        title: "JIT Liquidity Provision",
+                        desc: "Exploiting mempool imbalances by minting concentrated liquidity precisely at the current tick, capturing the swap fee, and withdrawing in a single atomic block to neutralize impermanent loss."
+                    },
+                    ai: {
+                        title: "Predictive AI (ONNX)",
+                        desc: "Bypassing Python GIL latency bottlenecks. PyTorch neural networks are serialized into static ONNX formats and executed via C++ runtimes, achieving forward passes in 0.3929 milliseconds."
+                    },
+                    mev: {
+                        title: "MEV Shielding",
+                        desc: "Bypassing the public mempool. Cryptographic bundles are routed directly to private block builders (Flashbots). If Net-Expected-Value (NEV) targets fail, the bundle drops silently with zero gas loss."
+                    }
+                },
+                pitchSection: {
+                    title: "Institutional Narrative",
+                    targetLabel: "Target Audience:"
+                },
+                kbSection: {
+                    backBtn: "RETURN TO MAIN PORTAL",
+                    title: "Institutional Knowledge Base",
+                    subtitle: "A theoretical index of macroeconomic, quantitative, and decentralized financial structures.",
+                    plainEnglishTitle: "In Plain English"
+                },
+                footer: {
+                    copyright: "© 2026 NICK SAPEROV. ALL RIGHTS RESERVED."
+                }
+            },
+            ru: {
+                nav: {
+                    title: "LIQUIDITY",
+                    subtitle: "EVAPORATOR",
+                    architecture: "Архитектура",
+                    pitch: "Стратегия",
+                    kb: "База Знаний"
+                },
+                hero: {
+                    badge: "v3.10.0-TEE-SOLVER РАЗВЕРНУТ",
+                    title1: "Субмиллисекундное Извлечение",
+                    title2: "Альфы в Блокчейне.",
+                    description: "Высокочастотный криптографический солвер намерений. Мы используем временные вакуумы ликвидности с помощью предиктивных нейронных сетей, доказательств с нулевым разглашением (ZK) и JIT-исполнения.",
+                    btnArch: "Изучить Архитектуру",
+                    btnKb: "Открытая БЗ"
+                },
+                architecture: {
+                    jit: {
+                        title: "JIT Обеспечение Ликвидности",
+                        desc: "Использование дисбалансов мемпула путем создания концентрированной ликвидности точно на текущем тике, захвата комиссии за своп и вывода средств в одном атомарном блоке для нейтрализации непостоянных потерь."
+                    },
+                    ai: {
+                        title: "Предиктивный ИИ (ONNX)",
+                        desc: "Обход узких мест задержки Python GIL. Нейронные сети PyTorch сериализуются в статические форматы ONNX и выполняются через среду выполнения C++, достигая прямого прохода за 0.3929 миллисекунды."
+                    },
+                    mev: {
+                        title: "MEV Защита",
+                        desc: "Обход публичного мемпула. Криптографические бандлы направляются напрямую приватным сборщикам блоков (Flashbots). Если цели чистой ожидаемой стоимости (NEV) не достигаются, бандл тихо отбрасывается без потери газа."
+                    }
+                },
+                pitchSection: {
+                    title: "Институциональный Нарратив",
+                    targetLabel: "Целевая аудитория:"
+                },
+                kbSection: {
+                    backBtn: "ВЕРНУТЬСЯ НА ГЛАВНУЮ",
+                    title: "Институциональная База Знаний",
+                    subtitle: "Теоретический указатель макроэкономических, количественных и децентрализованных финансовых структур.",
+                    plainEnglishTitle: "Простым Языком"
+                },
+                footer: {
+                    copyright: "© 2026 NICK SAPEROV. ВСЕ ПРАВА ЗАЩИЩЕНЫ."
+                }
+            }
+        };
+
+        // --- PITCH DECKS ---
+        const PITCHES = {
+            en: {
+                easy: {
+                    id: 'easy',
+                    label: 'Abstract',
+                    target: 'Traditional Angel Investors, TradFi Operators',
+                    title: 'The High-Speed Toll Booth',
+                    content: `
+                        <p>Liquidity Evaporator brings Wall Street high-frequency trading infrastructure to the digital asset space.</p>
+                        <p>Most crypto investors try to guess whether a coin is going to go up or down. We don't. Predicting the future of an asset is essentially gambling. Instead, we act as an automated, high-speed toll booth for the crypto internet.</p>
+                        <p>Every day, billions of dollars are traded on decentralized exchanges. When large trades happen, they temporarily disrupt the balance of the exchange, creating a momentary vacuum. Our proprietary artificial intelligence constantly monitors the global network for these vacuums.</p>
+                        <p>When it spots a massive, highly profitable trade about to happen, our system steps in for exactly 12 seconds. We temporarily provide the cash the exchange needs to process that specific trade, collect the massive transaction fee, and immediately pull our cash back out. We don't hold any cryptocurrency overnight. We don't care if the market crashes by 50% tomorrow, because our capital is completely safely parked in US Dollar stablecoins when we aren't actively executing a 12-second trade.</p>
+                        <p>What makes our system unique is our absolute downside protection. We built a mathematical "bouncer" into our code. Before our system ever spends a dime to execute a trade, it runs a perfect simulation. If the simulation shows that the network fees will cost more than the profit we stand to make, the bouncer instantly cancels the trade.</p>
+                        <p>We have successfully engineered an incredibly fast, highly defensive cash-flow machine that generates yield from market chaos without ever taking on the risk of holding volatile assets.</p>
+                    `
+                },
+                intermediate: {
+                    id: 'intermediate',
+                    label: 'Institutional',
+                    target: 'Web3 VCs, Crypto-Native Family Offices',
+                    title: 'JIT Liquidity Architecture',
+                    content: `
+                        <p>Liquidity Evaporator is an institutional-grade, high-frequency trading infrastructure built for decentralized exchanges. Our core mandate is alpha extraction with zero overnight market exposure.</p>
+                        <p>Traditional liquidity providers on automated market makers (AMMs) like Uniswap deposit their capital and passively wait, absorbing severe "Impermanent Loss" whenever the market moves against them. We flipped this model. Our system utilizes a Just-In-Time (JIT) liquidity architecture.</p>
+                        <p>Our bot monitors the blockchain's central nervous system (the mempool) in real-time. When it detects a large retail trader about to execute a massive swap in a depleted pool, our predictive AI calculates the exact fee that trade will generate. In a fraction of a second, we front-run the trade by injecting our capital, let the retail user trade against us to capture 99% of the exchange fee, and instantly withdraw our capital before anyone else can interact with it. Our capital is exposed to the market for less than 12 seconds.</p>
+                        <p>The edge lies in our speed and our MEV (Maximal Extractable Value) shielding. Standard trading bots written in Python are too slow to compete on modern L2 networks. We translated our predictive AI into C++, executing decisions in under 0.4 milliseconds.</p>
+                        <p>Furthermore, we never broadcast our trades publicly. If we did, predatory bots would steal our strategy. We route our trades directly to private block builders in "sealed envelopes" alongside a small tip. If our trade successfully generates a profit, the builder takes the tip and processes the transaction. If the trade fails to meet our strict profit margins, the builder throws the envelope away. We never pay transaction fees on failed trades. It is a closed-loop, structurally risk-mitigated cash flow engine.</p>
+                    `
+                },
+                advanced: {
+                    id: 'advanced',
+                    label: 'Deep Tech',
+                    target: 'Quant Funds, Web3 Core Engineers',
+                    title: 'Sub-Millisecond ZKML Intent Solver',
+                    content: `
+                        <p>Liquidity Evaporator is a sub-millisecond, ZKML-driven intent solver engineered for Ethereum L2s. We do not take directional market risk. We operate exclusively as a Just-In-Time (JIT) liquidity provider, exploiting transient liquidity vacuums on Constant Product AMMs via intra-block execution cascades.</p>
+                        <p>The fundamental flaw in modern algorithmic trading is equating high heteroscedasticity (volatility) with high entropy (unpredictability). While crypto markets appear chaotic, the underlying physics of AMMs ($x \\cdot y = k$, where $x$ and $y$ represent the pool's respective token reserves and $k$ is the invariant constant) are strictly deterministic. By tracking order flow imbalance and implied slippage in 50-millisecond TimescaleDB windows, our quantitative engine identifies moments where high variance becomes mathematically certain, artificially lowering system entropy to extract alpha.</p>
+                        <p>Our execution architecture bypasses the standard constraints of Python algorithmic bots. To conquer the 5.0-millisecond Flashbots builder boundary, our Long Short-Term Memory (LSTM) predictive network is serialized into a static ONNX format, flattening dynamic arrays to execute entirely on a C++ backend. This eliminates the Python Global Interpreter Lock (GIL) and crushes our inference latency to exactly 0.3929 milliseconds.</p>
+                        <p>When a toxic liquidity drain is detected, the engine dynamically calculates the optimal JIT capital required to dilute the target tick. We mint concentrated liquidity, absorb the victim's swap fee, and burn the position in a single, atomic block. To guarantee zero-trust execution, the payload evaluates the Net-Expected-Value (NEV). If the base network fee and builder bribe exceed the extracted swap fee, the smart contract mathematically guarantees a revert, dropping the bundle silently. We utilize Flashbots RPCs exclusively. If the execution does not clear our hardcoded profitability threshold, the block builder discards the payload. We pay zero gas for failed strikes.</p>
+                        <p>We have successfully mapped our neural network into a ZK-SNARK circuit via EZKL, allowing us to mathematically prove our execution logic on-chain without exposing proprietary weights to MEV searchers. The architecture is live, completely headless, and actively ingesting the Base L2 sequencer.</p>
+                    `
+                }
+            },
+            ru: {
+                easy: {
+                    id: 'easy',
+                    label: 'Абстрактный',
+                    target: 'Традиционные ангел-инвесторы, операторы TradFi',
+                    title: 'Высокоскоростной пункт взимания платы',
+                    content: `
+                        <p>Liquidity Evaporator переносит высокочастотную торговую инфраструктуру Уолл-стрит в пространство цифровых активов.</p>
+                        <p>Большинство криптоинвесторов пытаются угадать, вырастет монета или упадет. Мы этого не делаем. Предсказывать будущее актива — это, по сути, азартная игра. Вместо этого мы действуем как автоматизированный высокоскоростной пункт взимания платы для криптоинтернета.</p>
+                        <p>Каждый день на децентрализованных биржах торгуются миллиарды долларов. Когда происходят крупные сделки, они временно нарушают баланс биржи, создавая мгновенный вакуум. Наш проприетарный искусственный интеллект постоянно отслеживает глобальную сеть на предмет таких вакуумов.</p>
+                        <p>Когда он замечает надвигающуюся крупную и прибыльную сделку, наша система вмешивается ровно на 12 секунд. Мы временно предоставляем наличные, необходимые бирже для проведения этой конкретной сделки, забираем огромную комиссию за транзакцию и немедленно выводим наши деньги обратно. Мы не держим криптовалюту на ночь. Нам все равно, рухнет ли рынок на 50% завтра, потому что наш капитал абсолютно безопасно припаркован в долларовых стейблкоинах, когда мы не выполняем 12-секундную сделку.</p>
+                        <p>Наша уникальность — в абсолютной защите от убытков. В наш код встроен математический "вышибала". Прежде чем система потратит хоть копейку на сделку, она запускает идеальную симуляцию. Если симуляция показывает, что комиссии сети обойдутся дороже, чем ожидаемая прибыль, этот вышибала мгновенно отменяет сделку.</p>
+                        <p>Мы успешно спроектировали невероятно быструю, высокозащищенную машину по генерации денежного потока, которая извлекает доход из рыночного хаоса, никогда не беря на себя риск владения волатильными активами.</p>
+                    `
+                },
+                intermediate: {
+                    id: 'intermediate',
+                    label: 'Институциональный',
+                    target: 'Web3 Венчурные фонды, Крипто-Семейные офисы',
+                    title: 'Архитектура JIT-ликвидности',
+                    content: `
+                        <p>Liquidity Evaporator — это институциональная высокочастотная торговая инфраструктура, созданная для децентрализованных бирж. Наш главный мандат — извлечение альфы с нулевым рыночным риском переноса позиций на следующий день.</p>
+                        <p>Традиционные поставщики ликвидности на автоматизированных маркет-мейкерах (AMM), таких как Uniswap, вносят свой капитал и пассивно ждут, неся серьезные "непостоянные потери" (Impermanent Loss), когда рынок движется против них. Мы перевернули эту модель. Наша система использует архитектуру ликвидности "точно в срок" (Just-In-Time, JIT).</p>
+                        <p>Наш бот отслеживает центральную нервную систему блокчейна (мемпул) в режиме реального времени. Когда он обнаруживает, что крупный розничный трейдер собирается совершить масштабный своп в истощенном пуле, наш предиктивный ИИ рассчитывает точную комиссию, которую сгенерирует эта сделка. За доли секунды мы опережаем сделку (front-run), вливая наш капитал, позволяем розничному пользователю торговать против нас, чтобы захватить 99% комиссии биржи, и мгновенно выводим наш капитал до того, как кто-либо еще сможет с ним взаимодействовать. Наш капитал подвергается воздействию рынка менее 12 секунд.</p>
+                        <p>Наше преимущество заключается в скорости и защите от MEV (Максимально извлекаемой ценности). Стандартные торговые боты, написанные на Python, слишком медленны для конкуренции в современных сетях L2. Мы перевели наш предиктивный ИИ на C++, выполняя решения менее чем за 0.4 миллисекунды.</p>
+                        <p>Кроме того, мы никогда не транслируем наши сделки публично. Если бы мы это делали, хищные боты украли бы нашу стратегию. Мы направляем наши сделки напрямую приватным сборщикам блоков в "запечатанных конвертах" вместе с небольшими чаевыми. Если наша сделка успешно генерирует прибыль, сборщик забирает чаевые и обрабатывает транзакцию. Если сделка не соответствует нашей строгой марже прибыли, сборщик выбрасывает конверт. Мы никогда не платим комиссии за транзакции в неудачных сделках. Это замкнутый механизм генерации денежного потока со структурно сниженными рисками.</p>
+                    `
+                },
+                advanced: {
+                    id: 'advanced',
+                    label: 'Deep Tech',
+                    target: 'Квант-фонды, Основные инженеры Web3',
+                    title: 'Субмиллисекундный ZKML Солвер Намерений',
+                    content: `
+                        <p>Liquidity Evaporator — это субмиллисекундный солвер намерений на базе ZKML, разработанный для Ethereum L2 сетей. Мы не берем на себя направленный рыночный риск. Мы работаем исключительно как JIT (Just-In-Time) провайдер ликвидности, эксплуатируя временные вакуумы ликвидности на AMM с постоянным произведением через внутриблочные каскады исполнения.</p>
+                        <p>Фундаментальная ошибка современного алгоритмического трейдинга заключается в приравнивании высокой гетероскедастичности (волатильности) к высокой энтропии (непредсказуемости). Хотя крипторынки кажутся хаотичными, базовая физика AMM ($x \\cdot y = k$, где $x$ и $y$ представляют резервы соответствующих токенов пула, а $k$ является инвариантной константой) строго детерминирована. Отслеживая дисбаланс потока ордеров и подразумеваемое проскальзывание в 50-миллисекундных окнах TimescaleDB, наш количественный движок выявляет моменты, когда высокая дисперсия становится математически определенной, искусственно снижая энтропию системы для извлечения альфы.</p>
+                        <p>Наша архитектура исполнения обходит стандартные ограничения алгоритмических ботов на Python. Чтобы преодолеть границу в 5.0 миллисекунд для сборщиков Flashbots, наша предиктивная сеть LSTM (Long Short-Term Memory) сериализуется в статический формат ONNX, сглаживая динамические массивы для полного исполнения на бэкенде C++. Это устраняет глобальную блокировку интерпретатора Python (GIL) и снижает задержку инференса ровно до 0.3929 миллисекунд.</p>
+                        <p>При обнаружении токсичного оттока ликвидности движок динамически рассчитывает оптимальный JIT-капитал, необходимый для размытия целевого тика. Мы чеканим (mint) концентрированную ликвидность, поглощаем комиссию за своп жертвы и сжигаем (burn) позицию в одном атомарном блоке. Для обеспечения исполнения с нулевым доверием полезная нагрузка (payload) оценивает чистую ожидаемую стоимость (NEV). Если базовая комиссия сети и взятка сборщику превышают извлеченную комиссию за своп, смарт-контракт математически гарантирует возврат (revert), тихо сбрасывая бандл. Мы используем исключительно RPC Flashbots. Если исполнение не преодолевает наш жестко заданный порог прибыльности, сборщик блоков отбрасывает полезную нагрузку. Мы платим нулевой газ за неудачные страйки.</p>
+                        <p>Мы успешно преобразовали нашу нейронную сеть в схему ZK-SNARK через EZKL, что позволяет нам математически доказывать нашу логику исполнения ончейн, не раскрывая проприетарные веса MEV-searchers. Архитектура работает в реальном времени в headless-режиме и активно получает данные из секвенсора Base L2.</p>
+                    `
+                }
+            }
+        };
+
+        // --- FULL KNOWLEDGE BASE DATA ---
+        const KB_CATEGORIES = {
+            en: [
+                {
+                    title: "I. Macroeconomics & Econometrics",
+                    entries: [
+                        {
+                            tag: "Econometrics",
+                            term: "Vector Autoregression (VAR) & Impulse-Response",
+                            academic: `
+                                <p><strong>The Concept:</strong> Traditional sciences utilize controlled experiments to falsify theories. In macroeconomics, controlled experiments are impossible. <strong>Vector Autoregression (VAR)</strong>, pioneered by Christopher Sims (Nobel Prize, 2011), solves this by treating multiple time-series variables symmetrically. Instead of forcing structural assumptions (e.g., A causes B), VAR models assume every variable is a linear function of its own past values and the past values of all other variables in the system.</p>
+                                <div class="formula-box">
+                                    $$Y_t = c + A_1 Y_{t-1} + A_2 Y_{t-2} + \\dots + A_p Y_{t-p} + e_t$$
+                                    <em class="text-sm text-gray-400">Where $Y_t$ is a vector of variables, $A$ represents coefficient matrices, and $e_t$ is the unexpected shock.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Isolating the "Impulse-Response Function"—tracing how an unanticipated shock to one variable (e.g., an unexpected interest rate hike) ripples through the entire system over time.</li>
+                                    <li><strong>Known Vulnerability:</strong> The "Curse of Dimensionality." Adding too many variables exponentially increases the parameters, leading to overfitting.</li>
+                                    <li><strong>Resolution:</strong> Implementing strict lag-length criteria (AIC/BIC) or utilizing Bayesian VARs (BVAR) to shrink parameters.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine throwing a large rock into a pond. You want to know exactly how the water will react.</p>
+                                <p>Instead of trying to guess the physics of the water, a <strong>VAR model</strong> looks at millions of past examples of rocks hitting ponds. It calculates exactly how the ripples will form, how they will bounce off the shore, and how they will collide with each other over time.</p>
+                                <p>It allows researchers to isolate a <strong>"Shock"</strong> (the rock hitting the water) and track its <strong>"Impulse Response"</strong> (the resulting waves) without needing a perfect physics laboratory.</p>
+                            `
+                        },
+                        {
+                            tag: "Statistics",
+                            term: "Heteroscedasticity",
+                            academic: `
+                                <p><strong>The Concept:</strong> In standard linear regression models (OLS), a core assumption is <em>homoscedasticity</em>: the variance of the error term is constant across all independent variables. <strong>Heteroscedasticity</strong> occurs when this assumption is violated—the dispersion of errors systematically changes as the value of the independent variable changes.</p>
+                                <div class="formula-box">
+                                    $$Var(u_i | X_i) = \\sigma_i^2$$
+                                    <em class="text-sm text-gray-400">(Notice the subscript $i$ on $\\sigma^2$, indicating variance is not constant).</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Financial asset pricing. Volatility (variance) often clusters and increases as the absolute price of an asset increases.</li>
+                                    <li><strong>Known Vulnerability:</strong> Heteroscedasticity does not bias the coefficients, but it invalidates the standard errors, making hypothesis testing (P-values) highly unreliable.</li>
+                                    <li><strong>Resolution:</strong> Utilizing Heteroscedasticity-Robust Standard Errors (e.g., White's estimator) or employing GARCH (Generalized Autoregressive Conditional Heteroskedasticity) models.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine driving a car. At 10 mph, the steering wheel barely vibrates. At 60 mph, it shakes a little bit. At 120 mph, the steering wheel is vibrating violently.</p>
+                                <p>The faster you go, the wider the variance in the car's stability. In statistics, when the "shakiness" of your data gets wilder as the numbers get bigger, that is called <strong>Heteroscedasticity</strong>. It means you can't use standard rulers to measure your risk.</p>
+                            `
+                        }
+                    ]
+                },
+                {
+                    title: "II. Computer Science & Data Modeling",
+                    entries: [
+                        {
+                            tag: "System Architecture",
+                            term: "Deterministic State Mapping & Cross-Contamination",
+                            academic: `
+                                <p><strong>The Concept:</strong> In highly asynchronous, parallelized network environments (such as distributed ledgers or high-frequency mempools), processing raw, unlabeled data streams invites structural desynchronization. If two independent state changes occur within the same temporal block, a purely reactive system may erroneously correlate them, resulting in "Mathematical Hallucination."</p>
+                                <div class="formula-box">
+                                    $$Hash_{ID} = \\text{keccak256}(\\text{0xff} \\parallel A_{factory} \\parallel \\text{salt}_{data} \\parallel H_{bytecode})$$
+                                    <em class="text-sm text-gray-400">Deterministic derivation mapping utilizing the CREATE2 collision-resistant hash parameters.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Isolating independent financial events. By deterministically hashing the exact memory address of the origin contract off-chain, quantitative engines can tag every incoming data packet with a mathematically absolute key.</li>
+                                    <li><strong>Known Vulnerability:</strong> Lexical sorting failures. If the parameters comprising the <code>salt</code> (e.g., Token A and Token B) are passed in alternating orders, the resulting hashes will mismatch, breaking the deterministic map.</li>
+                                    <li><strong>Resolution:</strong> Enforcing strict, invariant lexical sorting of all multidimensional array parameters prior to cryptographic hashing.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine watching a crowded intersection. You see a red car pull away from a curb, and a millisecond later, you see a red car speed through a traffic light. Your brain might naturally assume it is the exact same car.</p>
+                                <p>In high-frequency data, this assumption is deadly. This is a <strong>Mathematical Hallucination</strong>.</p>
+                                <p>To fix this, we stop looking at the colors of the cars and start mathematically scanning their license plates. We force the system to cross-reference the license plates off-screen before it is ever allowed to conclude the two events are related. This completely isolates our data and prevents the algorithm from making bad bets based on coincidences.</p>
+                            `
+                        },
+                        {
+                            tag: "Machine Learning",
+                            term: "Hidden Markov Models (HMM)",
+                            academic: `
+                                <p><strong>The Concept:</strong> A statistical model representing a system that transitions between different states over time. In a standard Markov model, the state is directly visible. In a <strong>Hidden Markov Model</strong>, the true state of the system is unobservable (hidden), but the system generates outputs (emissions) that <em>can</em> be observed. The model infers the hidden state strictly from the probability distribution of the visible emissions.</p>
+                                <div class="formula-box">
+                                    $$P(Y, X) = P(Y_1|X_1)P(X_1) \\prod_{t=2}^{T} P(Y_t|X_t)P(X_t|X_{t-1})$$
+                                    <em class="text-sm text-gray-400">Where $X$ represents the hidden states and $Y$ represents the observable emissions.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Market Regime Detection. The true state of the market (e.g., "Bull", "Bear", "Chop") is hidden, but we can observe emissions (price, volume, volatility) to infer the current state.</li>
+                                    <li><strong>Known Vulnerability:</strong> Computational complexity scales exponentially with the number of states, and standard HMMs assume transition probabilities never change.</li>
+                                    <li><strong>Resolution:</strong> Utilizing the Viterbi Algorithm to efficiently decode the most likely sequence of hidden states, or using Time-Varying Transition Probability (TVTP) extensions.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine you have a friend who lives in a different city, and you never know what the weather is like there (the <strong>Hidden State</strong>).</p>
+                                <p>However, your friend calls you every day and tells you what they are wearing. If they say "I'm wearing sunglasses and a t-shirt" (the <strong>Observable Emission</strong>), you can mathematically deduce that it is likely sunny. If they say "I'm carrying an umbrella," you deduce it is raining.</p>
+                                <p>An HMM is an algorithm that uses the clues we <em>can</em> see to figure out the environment we <em>cannot</em> see.</p>
+                            `
+                        },
+                        {
+                            tag: "Deep Learning",
+                            term: "Long Short-Term Memory (LSTM) Networks",
+                            academic: `
+                                <p><strong>The Concept:</strong> Traditional Recurrent Neural Networks (RNNs) suffer from the "vanishing gradient problem," rendering them incapable of remembering long-term dependencies in sequential data. <strong>LSTMs</strong> solve this by introducing "memory cells" and a system of cryptographic gates (input, output, and forget gates) that mathematically regulate the flow of information, allowing the network to retain context across vast stretches of time.</p>
+                                <div class="formula-box">
+                                    $$h_t, c_t = \\text{LSTM}(X_t, h_{t-1}, c_{t-1})$$
+                                    <em class="text-sm text-gray-400">Where $h_t$ is the hidden state (short-term memory), $c_t$ is the cell state (long-term memory), and $X_t$ is the current input tensor.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Predictive Flow Classification. Instead of reacting to an isolated order book imbalance, an LSTM can ingest a time-series tensor of prior imbalances to predict the probability of a toxic liquidity event milliseconds before it physically occurs on-chain.</li>
+                                    <li><strong>Known Vulnerability:</strong> High Inference Latency. Eager execution of massive neural networks via standard Python Global Interpreter Locks (GIL) introduces structural latency (~15ms), which is fatal in high-frequency trading.</li>
+                                    <li><strong>Resolution:</strong> ONNX Serialization. Exporting the PyTorch computational graph into a static ONNX format and evaluating it strictly via a C++ backend runtime (<code>CPUExecutionProvider</code>) to compress inference latency below 1 millisecond.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine trying to understand the plot of a complex novel. If you only remember the sentence you are currently reading (a basic neural network), the story will make no sense.</p>
+                                <p>An <strong>LSTM</strong> acts like a human reader. It uses a "Forget Gate" to discard useless information (like the color of a side character's shirt in chapter 1) and an "Input Gate" to permanently store critical plot twists in its long-term memory.</p>
+                                <p>By remembering the sequence of events leading up to the present moment, the AI can actively predict the plot's ending before it even turns the page.</p>
+                            `
+                        },
+                        {
+                            tag: "Artificial Intelligence",
+                            term: "Retrieval-Augmented Generation (RAG)",
+                            academic: `
+                                <p><strong>The Concept:</strong> Large Language Models (LLMs) possess vast generalized knowledge but lack deterministic accuracy and up-to-the-millisecond domain-specific context. <strong>Retrieval-Augmented Generation</strong> solves this by structurally decoupling the reasoning engine from the memory bank. A vector database retrieves relevant, highly specific information (e.g., academic PDFs, live financial data) and actively injects it into the LLM's context window immediately prior to inference.</p>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Dynamic Hyperparameter Calibration. Instead of hardcoding risk thresholds ($\\rho$) or mathematical ceilings, a system can query a repository of econometric literature to infer the optimal configuration during an unprecedented structural market break.</li>
+                                    <li><strong>Known Vulnerability:</strong> API Conflicts and Schema Rejections. Enforcing rigid JSON output formats (controlled generation) often clashes with backend grounding infrastructure (Vector Search), causing immediate <code>400 INVALID_ARGUMENT</code> API rejections.</li>
+                                    <li><strong>Resolution:</strong> Schema Nullification & Asynchronous Execution. We run the RAG bridge parallel to the primary thread to prevent blocking. To bypass API conflicts, we abandon JSON enforcement entirely, instead requesting strictly delimited raw text (e.g., <code>RHO=0.015|JUSTIFICATION=...</code>) and utilizing programmatic string splitting in the execution layer to extract variables.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine you have a brilliant but forgetful professor. If you ask them a highly specific question about an obscure math paper from 1980, they might confidently give you the wrong answer (a "hallucination").</p>
+                                <p><strong>RAG</strong> is like giving that professor an open-book test and a lightning-fast librarian. The librarian (the vector database) finds the exact paragraph in the textbook, hands it to the professor, and says, "Answer the question using <em>only</em> this text."</p>
+                                <p>It allows AI to make highly accurate, fact-based decisions based on specialized literature rather than relying on its generalized training memory.</p>
+                            `
+                        }
+                    ]
+                },
+                {
+                    title: "III. Decentralized Finance (DeFi) & Blockchain",
+                    entries: [
+                        {
+                            tag: "Market Microstructure",
+                            term: "Concentrated Liquidity & JIT Provisioning",
+                            academic: `
+                                <p><strong>The Concept:</strong> Legacy AMMs distribute liquidity ($L$) uniformly from price $0$ to $\\infty$, resulting in extreme capital inefficiency. Concentrated Liquidity (V3 Mechanics) allows providers to bind capital to specific, discrete price bands (ticks). However, this creates transient states where Active Liquidity defending the current spot price is essentially zero.</p>
+                                <div class="formula-box">
+                                    $$L_{JIT} = L_{new} \\cdot \\frac{\\tau}{1 - \\tau}$$
+                                    <em class="text-sm text-gray-400">Where $L_{JIT}$ is the exact liquidity injection required to mathematically dilute the existing tick liquidity ($L_{new}$) and capture the target fee percentage ($\\tau$).</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Just-In-Time (JIT) Provisioning:</strong> Instead of absorbing passive impermanent loss over time, an algorithmic operator can observe a pending retail swap, instantly <em>front-run</em> the swap by minting $L_{JIT}$ at the exact current tick, absorb the swap fee, and instantly <em>back-run</em> to burn the liquidity in the same block.</li>
+                                    <li><strong>Known Vulnerability:</strong> Generalized front-runners stealing the JIT payload.</li>
+                                    <li><strong>Resolution:</strong> Executing the 3-transaction sandwich (Mint &rarr; Target Swap &rarr; Burn) exclusively via cryptographic bundles sent to private block builders.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Old decentralized exchanges were like spreading a tiny amount of butter over a mile-long piece of toast. It worked, but you barely got any butter in each bite.</p>
+                                <p>Modern exchanges let people concentrate huge blocks of butter onto a single slice. But if someone takes a bite <em>next</em> to that slice, they get nothing, and the market crashes briefly.</p>
+                                <p><strong>Just-In-Time (JIT) Liquidity</strong> is an algorithmic trick. The bot sees a customer about to take a bite on an empty slice. In a fraction of a second, the bot slides a massive block of butter under their knife, collects the exchange fee for providing the butter, and instantly pulls the remaining butter back before anyone else can touch it. Zero long-term risk, 100% of the fee.</p>
+                            `
+                        },
+                        {
+                            tag: "DeFi Architecture",
+                            term: "Automated Market Makers (AMMs) & Routers",
+                            academic: `
+                                <p><strong>The Concept:</strong> Traditional exchanges rely on central limit order books (CLOBs) matching buyers and sellers. <strong>AMMs</strong> are autonomous smart contracts holding reserves of two or more tokens. They facilitate permissionless trades against these reserves using deterministic mathematical formulas, the most common being the Constant Product formula.</p>
+                                <div class="formula-box">
+                                    $$x \\cdot y = k$$
+                                    <em class="text-sm text-gray-400">Where $x$ is the reserve of Token A, $y$ is the reserve of Token B, and $k$ is a constant.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Routers:</strong> Helper contracts that map execution paths. Because a direct pool for "Token A to Token C" may not exist, a Router algorithmically hops through intermediary pools (e.g., A &rarr; B &rarr; C) to fulfill the trade.</li>
+                                    <li><strong>Known Vulnerability:</strong> "Slippage" (price impact of large trades) and "Impermanent Loss" (divergence loss for liquidity providers). Furthermore, public execution paths are vulnerable to MEV (Maximal Extractable Value) sandwich attacks.</li>
+                                    <li><strong>Resolution:</strong> Concentrated Liquidity (V3 AMMs) to deepen capital efficiency at specific price ticks; implementing strict <code>amountOutMinimum</code> slippage parameters in the Router payload.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Think of an AMM as a robotic cashier standing at a booth with two buckets: one full of Apples, one full of Oranges.</p>
+                                <p>The robot's only rule is that the total value of both buckets must stay balanced. If someone buys a lot of Apples, the Apple bucket gets empty. To fix the balance, the robot automatically raises the price of Apples and lowers the price of Oranges to attract sellers. No human intervention is needed.</p>
+                                <p>The <strong>Router</strong> is the GPS. If you want to trade Bananas for Apples, but the robot only takes Oranges, the Router automatically trades your Bananas for Oranges down the street, brings them to the robot, and gets you your Apples in one seamless step.</p>
+                            `
+                        },
+                        {
+                            tag: "Market Microstructure",
+                            term: "Discrete Price Boundaries (Tick Spacing)",
+                            academic: `
+                                <p><strong>The Concept:</strong> In modern Concentrated Liquidity environments, price cannot be expressed as an infinitely continuous spectrum. The price curve is strictly partitioned into discrete, quantifiable intervals called "ticks." Crucially, the mathematical width of these ticks (the <strong>Tick Spacing</strong>) is explicitly tied to the fee tier of the liquidity pool to optimize for standard market variance.</p>
+                                <div class="formula-box">
+                                    $$tick_{lower} = \\lfloor \\frac{tick_{current}}{spacing} \\rfloor \\times spacing$$
+                                    <em class="text-sm text-gray-400">Where $spacing$ is dictated by the pool parameters (e.g., 0.05% fee tier = 10 ticks, 0.30% fee tier = 60 ticks).</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Correct structural alignment of JIT liquidity provisioning. You cannot provide liquidity across an arbitrary price band; it must strictly snap to the predefined boundaries established by the pool's tick spacing matrix.</li>
+                                    <li><strong>Known Vulnerability:</strong> Boundary Reversions. Executing a payload that attempts to map a 0.30% spacing logic (60) onto a 0.05% pool (10) will trigger an immediate EVM revert, causing the block builder to drop the entire bundle.</li>
+                                    <li><strong>Resolution:</strong> Dynamic Tick Spacing Matrices. The algorithmic core must programmatically fetch the exact <code>feeTier</code> from the state machine and dynamically calculate the $tick_{lower}$ and $tick_{upper}$ floor functions before routing the calldata.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Think of the price of an asset not as a smooth ramp, but as a staircase.</p>
+                                <p>If you are trading highly stable assets (like two different U.S. Dollar coins), the staircase has incredibly tiny, millimeter-high steps (a 0.01% fee pool). You can place your money almost exactly where you want it. If you are trading wild, volatile crypto tokens, the staircase has massive, foot-high steps (a 1.00% fee pool).</p>
+                                <p>You cannot place your money floating in mid-air between two steps. You must place it firmly on an existing step, or the exchange will reject your money entirely.</p>
+                            `
+                        },
+                        {
+                            tag: "DeFi Mechanics",
+                            term: "Flash Loans & Cross-AMM Arbitrage",
+                            academic: `
+                                <p><strong>The Concept:</strong> Traditional arbitrage requires significant resting capital to exploit price inefficiencies across different markets. <strong>Flash Loans</strong> eliminate this requirement by allowing operators to borrow virtually unlimited, uncollateralized assets from a lending protocol, provided the principal and a micro-fee are returned within the exact same EVM block.</p>
+                                <div class="formula-box">
+                                    $$\\Delta x^* = \\frac{\\sqrt{\\gamma_1 \\gamma_2 x_1 y_2 x_2 y_1} - x_1 x_2}{\\gamma_1 x_2 + \\gamma_1 \\gamma_2 y_1}$$
+                                    <em class="text-sm text-gray-400">Where $\\Delta x^*$ is the optimal borrow size to mathematically maximize profit between two disjointed constant-product AMMs with fee multipliers $\\gamma$ and respective reserves $x, y$.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Extracting extreme price dislocations across fragmented liquidity pools (e.g., Pool A vs. Pool B) without exposing portfolio capital to market delta risk.</li>
+                                    <li><strong>Known Vulnerability:</strong> Transaction Reversion. If the multi-hop routing fails to generate enough yield to cover the loan fee and associated gas costs, the EVM reverts the entire transaction.</li>
+                                    <li><strong>Resolution:</strong> Enforcing strict, deterministic profitability boundaries ($\\Delta x_{out} \\ge \\phi + \\epsilon$) within the execution proxy smart contract prior to initiating debt repayment.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine walking into a bank and asking to borrow ten million dollars for exactly 12 seconds, with no credit check and no collateral required.</p>
+                                <p>You use that money to instantly buy a rare painting in London and sell it for a higher price in New York. You return the ten million to the bank, pay a small fee, and keep the profit.</p>
+                                <p>If you discover you can't sell the painting for a profit, the bank uses a magical time machine to rewind the universe 12 seconds, pretending the loan never happened. Because of how the blockchain works, you literally cannot lose the borrowed money.</p>
+                            `
+                        },
+                        {
+                            tag: "Network Physics",
+                            term: "Maximal Extractable Value (MEV)",
+                            academic: `
+                                <p><strong>The Concept:</strong> Blockchains are not processed simultaneously; transactions sit in a public waiting room called the "mempool" before being bundled into a block by a builder/miner. <strong>MEV</strong> is the profit these actors can extract by arbitrarily reordering, inserting, or censoring those transactions. When a highly profitable execution payload is broadcast publicly, generalized front-running bots simulate the trade, duplicate it, and submit it with a higher priority gas bribe.</p>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Shielding calculated alpha. A mathematically perfect execution script is useless if the transaction is sandwiched or stolen in the public mempool prior to block inclusion.</li>
+                                    <li><strong>Known Vulnerability:</strong> Generalized front-runners constantly monitor the mempool for <code>targetRouter.call()</code> payloads, decoding the execution vectors to steal the spread.</li>
+                                    <li><strong>Resolution:</strong> Private RPC Relays (e.g., Flashbots). Bypassing the public mempool entirely by sending cryptographic execution bundles directly to private block builders, accompanied by a tip (bribe) for guaranteed, atomic inclusion.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine playing a high-stakes game of poker, but you are forced to lay your cards face up on the table before making your final bet.</p>
+                                <p>Other players (MEV bots) can see you have a winning hand. They instantly bribe the dealer (the block builder) to let them play your exact same hand before you do, stealing your winnings right out from under you.</p>
+                                <p>To fix this, systems use <strong>Private Routing</strong>. Instead of playing face up, we slip our cards and a small tip directly to the dealer in a sealed envelope. If our hand wins, the dealer takes the tip. If it loses, the dealer throws the envelope in the trash.</p>
+                            `
+                        },
+                        {
+                            tag: "EVM Infrastructure",
+                            term: "Smart Contracts & State Execution",
+                            academic: `
+                                <p><strong>The Concept:</strong> Smart contracts are immutable, deterministic programs deployed on a distributed ledger. In the Ethereum Virtual Machine (EVM), these contracts hold state (variables) and logic (compiled bytecode).</p>
+                                <p>Interacting with the EVM takes two distinct forms:</p>
+                                <ul class="meta-list">
+                                    <li><strong>State Reads (<code>staticCall</code> / <code>eth_call</code>):</strong> Querying the blockchain's current state. This requires zero cryptographic consensus, costs zero gas, and executes in milliseconds via RPC nodes.</li>
+                                    <li><strong>State Writes (Transactions):</strong> Altering the blockchain's state. This requires cryptographic signatures, consumes network "Gas" (computational fee), and must be validated by decentralized sequencers/miners.</li>
+                                    <li><strong>Known Vulnerability:</strong> Flawed state logic can lead to Reentrancy Attacks (interrupting execution before state updates) or Oracle Manipulation (tricking the contract's pricing data).</li>
+                                    <li><strong>Resolution:</strong> Checks-Effects-Interactions patterns, Reentrancy Guards, and utilizing decentralized Time-Weighted Average Price (TWAP) oracles.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>A smart contract is a digital vending machine.</p>
+                                <p>Anyone can look through the glass to see how much candy is inside or check the price tag. Looking through the glass is completely free and instant (<strong>State Read</strong>).</p>
+                                <p>However, if you want to buy the candy, you have to insert money, push the buttons, and wait for the mechanical gears to dispense the item. You cannot change your mind halfway through. This mechanical action costs electricity and takes a few seconds (<strong>State Write</strong>).</p>
+                            `
+                        },
+                        {
+                            tag: "State Simulation",
+                            term: "Deterministic Local Forking (Shadow EVM)",
+                            academic: `
+                                <p><strong>The Concept:</strong> Testing complex, multi-transaction algorithmic strategies on a live blockchain involves unacceptable capital risk. <strong>Deterministic Local Forking</strong> solves this by copying the exact state (balances, smart contracts, variables) of a live blockchain (like Ethereum) at a specific block height into a localized, private environment. This creates a "Shadow EVM" where developers can simulate transactions deterministically without paying real gas fees or exposing strategies to the public.</p>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Simulating MEV (Maximal Extractable Value) bundles, validating smart contract boundaries, and testing high-frequency routing paths.</li>
+                                    <li><strong>Known Vulnerability:</strong> Hardware Asphyxiation. The Ethereum state tree is massive. Caching thousands of mainnet variables in a local runtime requires immense physical memory, often causing standard cloud servers to crash (Out-Of-Memory) during state compilation.</li>
+                                    <li><strong>Resolution:</strong> Utilizing high-memory virtual machines (e.g., 4GB+ RAM minimum for basic forks) and strictly pinning simulations to a static block number to prevent dynamic state drift.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine you are planning a high-stakes bank heist (legally, of course), and you need to know exactly how long the vault door takes to close.</p>
+                                <p>Instead of guessing on the actual day of the heist, you build a perfect, 1-to-1 replica of the bank in a warehouse. You can test your plan hundreds of times, fail, reset the room, and try again without ever risking going to jail. This is a <strong>Shadow EVM</strong>. It is a perfect clone of the blockchain running entirely on your own private computer.</p>
+                            `
+                        },
+                        {
+                            tag: "EVM Infrastructure",
+                            term: "Intra-Block State Dependencies (The Sequence Paradox)",
+                            academic: `
+                                <p><strong>The Concept:</strong> Advanced algorithmic strategies (like Flashbots bundles) often require executing multiple transactions in a specific, unbreakable sequence within a single block. A paradox arises when a later transaction relies on data generated by an earlier transaction in the same bundle (e.g., Transaction 3 needs the ID of an NFT minted in Transaction 1). Because all transactions must be cryptographically signed <em>before</em> submission, dynamic variables cannot be hardcoded into the final transaction's calldata.</p>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Just-In-Time (JIT) Liquidity sandwiches (Mint &rarr; Target Swap &rarr; Burn). The burn function must know what was just minted.</li>
+                                    <li><strong>Known Vulnerability:</strong> Bundle Rejection. Submitting incomplete or undefined calldata will cause the EVM simulation to fail, dropping the entire multi-transaction sequence from the block.</li>
+                                    <li><strong>Resolution:</strong> Transient Contract State. Engineering the execution smart contract to temporarily store the dynamically generated ID in its own internal memory during Transaction 1, allowing Transaction 3 to read it directly from the contract state instead of requiring it in the external calldata payload.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine you are mailing a sealed envelope containing three instructions to your stockbroker:</p>
+                                <p>1. Open a new, secret bank account.<br>2. Have a client deposit $100 into that secret account.<br>3. Withdraw the $100 from the secret account and give it to me.</p>
+                                <p>The problem is: how do you write Instruction 3 if you don't know the account number yet? You can't write it on the paper because the envelope is already sealed. <strong>The Solution:</strong> You change Instruction 3 to say, <em>"Withdraw the $100 from whatever account you just opened in Instruction 1."</em> You rely on the broker's internal memory instead of giving them the exact number.</p>
+                            `
+                        }
+                    ]
+                },
+                {
+                    title: "IV. Mathematics of Capital Management",
+                    entries: [
+                        {
+                            tag: "Risk Theory",
+                            term: "The Kelly Criterion",
+                            academic: `
+                                <p><strong>The Concept:</strong> A mathematical formula used to determine the optimal sizing of a series of bets or investments in order to maximize the logarithm of wealth (the long-term compound growth rate).</p>
+                                <div class="formula-box">
+                                    $$f^* = p - \\frac{q}{b}$$
+                                    <em class="text-sm text-gray-400">Where $f^*$ is the fraction of capital to wager, $p$ is the probability of winning, $q$ is the probability of losing ($1-p$), and $b$ is the payout odds.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Determining absolute maximum positional sizing. If an algorithm has a 60% win rate and a 1:1 risk/reward, Kelly dictates wagering exactly 20% of the bankroll per trade.</li>
+                                    <li><strong>Known Vulnerability:</strong> "Full Kelly" sizing guarantees a mathematically certain 50% drawdown at some point in the timeline. Furthermore, it assumes probabilities ($p$) are known with absolute certainty, which is impossible in financial markets.</li>
+                                    <li><strong>Resolution:</strong> "Fractional Kelly" (e.g., Half-Kelly or Quarter-Kelly). This drastically reduces drawdown volatility while sacrificing only a marginal amount of compound growth.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>If you have a rigged coin that lands on Heads 60% of the time, you obviously want to bet on Heads. But how much of your money do you bet?</p>
+                                <p>If you bet 100% of your money every time, you will eventually hit Tails and go bankrupt. If you bet $1 every time, you are wasting your advantage. The <strong>Kelly Criterion</strong> is the exact mathematical answer. It tells you the perfect percentage of your bankroll to bet to grow your money as fast as possible without ever hitting zero.</p>
+                            `
+                        },
+                        {
+                            tag: "Quantitative Sizing",
+                            term: "Volatility-Adjusted Sizing (Eckhardt Rule)",
+                            academic: `
+                                <p><strong>The Concept:</strong> Capital allocation should not be equal across all assets; it should be inversely proportional to the asset's real-time volatility. Popularized by Richard Eckhardt, this theory ensures that the <em>risk impact</em> of every position on the portfolio remains identical, regardless of the underlying asset's behavior.</p>
+                                <div class="formula-box">
+                                    $$Position Size = \\frac{Account Capital \\times Risk \\%}{Volatility (ATR or \\sigma)}$$
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Balancing a portfolio holding both high-variance assets (e.g., small-cap cryptocurrencies) and low-variance assets (e.g., bonds or large-cap equities).</li>
+                                    <li><strong>Known Vulnerability:</strong> Relies on historical lookback windows (e.g., 14-day ATR). If an asset undergoes an unprecedented structural volatility shock (a "Black Swan"), historical standard deviation fails to protect the portfolio.</li>
+                                    <li><strong>Resolution:</strong> Implementing dynamically shrinking lookback windows during high-stress market regimes, or enforcing absolute hard-stop percentage floors independent of calculated volatility.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine you are walking two dogs: a calm Golden Retriever and an energetic, unpredictable Jack Russell Terrier.</p>
+                                <p>If you give them both a 10-foot leash, the Terrier is going to pull you into the street. The <strong>Eckhardt Rule</strong> says you must adjust the leash based on the dog's behavior. You give the calm dog 10 feet of slack, but you only give the wild dog 2 feet. </p>
+                                <p>In finance, if an asset is swinging wildly, you buy less of it. If it is calm, you buy more. This keeps your total stress exactly balanced.</p>
+                            `
+                        },
+                        {
+                            tag: "Risk Theory",
+                            term: "Directional Inventory Paradox (Impermanent Loss)",
+                            academic: `
+                                <p><strong>The Concept:</strong> In automated market making (AMM), providing liquidity exposes the provider to directional inventory shifts. When a user trades against a liquidity pool, they extract one asset and deposit another, fundamentally altering the ratio of the provider's holdings. If the price of the extracted asset appreciates on external markets, the provider incurs an opportunity cost compared to simply holding the initial assets. This is known as <strong>Impermanent Loss (IL)</strong>.</p>
+                                <div class="formula-box">
+                                    $$IL(k) = \\frac{2\\sqrt{k}}{1+k} - 1$$
+                                    <em class="text-sm text-gray-400">Where $k$ is the ratio of the new price to the initial price. This quantifies the divergence loss.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Evaluating the true profitability of Just-In-Time (JIT) liquidity provisioning. The extracted swap fee must strictly exceed the impermanent loss incurred during the directional inventory shift.</li>
+                                    <li><strong>Known Vulnerability:</strong> Microscopic mathematical misalignment. If a strategy mints liquidity at arbitrary price ticks rather than dynamically calculating the exact optimal boundaries, the resulting impermanent loss can instantly eclipse the collected fees.</li>
+                                    <li><strong>Resolution:</strong> Strict On-Chain Profitability Boundaries. Programming the smart contract to calculate the total base asset value post-extraction and revert the entire transaction via a <code>CALL_EXCEPTION</code> if the final balance is lower than the starting balance plus the target margin.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine you run a currency exchange booth at an airport. You start your shift with 100 Euros and 100 Dollars.</p>
+                                <p>Suddenly, huge news drops and the Euro becomes extremely valuable. A crowd of travelers rushes your booth, buying all your Euros and handing you Dollars. You collected a tiny fee for every trade, which is great! But at the end of the day, your booth has 0 Euros and 200 Dollars. Because the Euro skyrocketed, if you had just stayed home and kept your original 100 Euros, you would be much richer.</p>
+                                <p>This is <strong>Impermanent Loss</strong>. It is the invisible cost of being the person forced to sell when everyone else wants to buy.</p>
+                            `
+                        },
+                        {
+                            tag: "Execution Theory",
+                            term: "Net-Expected-Value (NEV) Execution",
+                            academic: `
+                                <p><strong>The Concept:</strong> In a decentralized ledger environment, computational execution is a physical commodity with fluctuating market prices (Gas). A theoretically perfect mathematical arbitrage is completely invalid if the cost of accessing the execution layer exceeds the alpha extracted. <strong>Net-Expected-Value (NEV)</strong> bridges raw mathematical profit with physical network physics.</p>
+                                <div class="formula-box">
+                                    $$\\Pi_{NEV} = E[\\text{Gross Revenue}] - (\\text{Gas}_{Limit} \\times (\\text{BaseFee} + \\text{PriorityFee})) > 0$$
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Zero-Trust Execution Filters. Before an algorithmic system signs a cryptographic bundle, it must cross-reference the projected builder bribes and base network fees against the expected trading yield.</li>
+                                    <li><strong>Known Vulnerability:</strong> Priority Gas Auctions (PGAs). During times of high network stress, the <code>PriorityFee</code> required to secure block inclusion can spike hyperbolically, instantly flipping a profitable trade into a massive capital loss.</li>
+                                    <li><strong>Resolution:</strong> Dynamic telemetry streams. The execution engine constantly pulls real-time <code>baseFeeGwei</code> and automatically aborts the payload if $\\Pi_{NEV} \\le 0$, protecting the base operational capital.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine you find a store selling a $10 bill for only $5. It is mathematically a flawless deal; you are guaranteed to make a $5 profit.</p>
+                                <p>However, the store is on the other side of a bridge, and the bridge operator charges a $6 toll to cross. If you only look at the math of the deal, you make the trade and end up losing $1 overall. This is exactly how trading bots slowly bleed out their bankrolls.</p>
+                                <p><strong>Net-Expected-Value</strong> forces the bot to calculate the "toll" (the network transaction fees and bribes) <em>before</em> making the trade. If the toll costs more than the profit, the bot refuses to cross the bridge.</p>
+                            `
+                        }
+                    ]
+                },
+                {
+                    title: "V. Applied Cryptography & Zero-Knowledge Systems",
+                    entries: [
+                        {
+                            tag: "Cryptography",
+                            term: "Zero-Knowledge Machine Learning (ZKML) & SNARKs",
+                            academic: `
+                                <p><strong>The Concept:</strong> A Zero-Knowledge Succinct Non-Interactive Argument of Knowledge (ZK-SNARK) allows a "Prover" to mathematically demonstrate to a "Verifier" that a specific computation was executed correctly without revealing the inputs or the internal logic. In ZKML, a neural network is compiled into a cryptographic circuit, proving that proprietary AI evaluated data correctly.</p>
+                                <div class="formula-box">
+                                    $$\\pi = Prove(Circuit(X_{public}, W_{private}) == Y_{public})$$
+                                    <em class="text-sm text-gray-400">Where $\\pi$ is the cryptographic proof, $X_{public}$ is the market data, $W_{private}$ is the secret model weights, and $Y_{public}$ is the prediction.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Preserving trading alpha. A quantitative fund can prove to a blockchain smart contract that their AI accurately pricing a trade without ever exposing the neural network's secret formulas to competitors.</li>
+                                    <li><strong>Known Vulnerability:</strong> Architectural rigidity. Cryptographic circuits are stateless polynomial grids operating on finite prime fields. They fundamentally cannot process dynamic memory allocation, temporal loops (like LSTMs), or non-linear float math (like square roots).</li>
+                                    <li><strong>Resolution:</strong> Mathematical Flattening. Converting dynamic, time-series neural networks into strictly static Feed-Forward Multi-Layer Perceptrons (MLPs), replacing non-linear functions with quantized lookup tables (LUTs) and pure addition/multiplication operations.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine a magical Sudoku puzzle. You want to prove to someone that you solved it, but you refuse to show them the numbers you wrote down.</p>
+                                <p>A <strong>ZK-SNARK</strong> is a mathematical lock that guarantees you solved it correctly, keeping your specific answers totally secret. The catch? The lock is incredibly rigid. You can't use complex computer loops or dynamic memory to solve it; you have to flatten your entire thought process out into basic addition and multiplication so the lock can verify it.</p>
+                            `
+                        },
+                        {
+                            tag: "Systems Engineering",
+                            term: "ONNX Serialization & Dependency Harmonization",
+                            academic: `
+                                <p><strong>The Concept:</strong> Bridging high-level machine learning frameworks (like PyTorch or TensorFlow) with low-level hardware accelerators or cryptographic backends requires an intermediary representation format, such as the Open Neural Network Exchange (ONNX). Compilers enforce strict Operational Sets (Opsets) to standardize how mathematical nodes are represented.</p>
+                                <div class="formula-box">
+                                    $$PyTorch (Dynamic Graph) \\xrightarrow{JIT} ONNX (Opset X) \\xrightarrow{Tract} SNARK Circuit$$
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Translating a high-level Python trading algorithm into a low-level C++ or Rust-based cryptographic circuit for ultra-low latency execution.</li>
+                                    <li><strong>Known Vulnerability:</strong> Metadata Corruption via Version Downgrades. Modern compilers (like PyTorch Dynamo) force bleeding-edge Opsets (e.g., Opset 18), which are incompatible with strict cryptographic parsers that require older, proven structures (e.g., Opset 14). Asking a modern compiler to mathematically "downgrade" the file inherently corrupts the graph metadata.</li>
+                                    <li><strong>Resolution:</strong> Native Legacy Compiling. Forcefully downgrading the originating framework (e.g., reverting to PyTorch 1.13.1 LTS) to utilize legacy C++ JIT compilers that natively output uncorrupted, parser-friendly graphs.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine writing a book in modern internet slang, but the only printing press available exclusively understands formal Shakespearean English.</p>
+                                <p>If you use an automated translator to downgrade the slang into older English, it scrambles the grammar, and the printing press jams. The solution isn't to fix the broken translator; the solution is to write the original book using an older typewriter that <em>natively</em> outputs Shakespearean English, ensuring the press prints it flawlessly.</p>
+                            `
+                        },
+                        {
+                            tag: "Computer Science",
+                            term: "Cross-Language Asynchrony & Race Conditions",
+                            academic: `
+                                <p><strong>The Concept:</strong> High-performance systems often bridge languages for optimization (e.g., Python for data ingestion, Rust for cryptographic computation). When low-level languages execute background tasks (like fetching a massive cryptographic setup file from a server), they return a foreign asynchronous primitive (like a Rust "Future") to the high-level language.</p>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Downloading massive Structured Reference Strings (SRS) via Rust bindings (PyO3) into a Python execution script for ZK-SNARK compilation.</li>
+                                    <li><strong>Known Vulnerability:</strong> Type-Checking Blindspots. Standard Python <code>asyncio</code> tools may evaluate foreign Rust "Futures" as synchronous, causing the script to sprint ahead and attempt to read a file from the hard drive that is still downloading in the background, resulting in a fatal crash.</li>
+                                    <li><strong>Resolution:</strong> Deep Object Inspection. Utilizing advanced inspection modules (<code>inspect.isawaitable()</code>) that dynamically recognize cross-language awaitables rather than relying on strictly native coroutine checks, forcing the execution thread to safely block.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Imagine you are cooking dinner. You ask your sous-chef (who speaks a different language) to go to the store and buy flour. They nod and leave.</p>
+                                <p>Because you didn't perfectly understand their nod, you assume they instantly put the flour on the counter, so you try to start baking the cake immediately. The kitchen catches on fire because you didn't actually wait for them to come back.</p>
+                                <p>To fix this, you establish a strict, universal hand-signal that forces you to physically freeze everything you are doing until the flour is placed directly in your hands.</p>
+                            `
+                        }
+                    ]
+                },
+                {
+                    title: "VI. Theoretical Frameworks",
+                    entries: [
+                        {
+                            tag: "Information Theory",
+                            term: "Shannon Entropy",
+                            academic: `
+                                <p><strong>The Concept:</strong> Originating from information theory and thermodynamics, <strong>Entropy ($H$)</strong> is a mathematical measure of fundamental uncertainty, chaos, or "expected surprisal" in a system.</p>
+                                <div class="formula-box">
+                                    $$H(X) = - \\sum_{i=1}^{n} P(x_i) \\log_2 P(x_i)$$
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Application:</strong> Measuring the fundamental unpredictability of pending EVM state transitions and market noise.</li>
+                                    <li><strong>Market Context:</strong> A perfectly fair coin toss (50/50) has maximum entropy (1 bit) because the outcome is entirely unpredictable. A biased coin (e.g., 90/10) has lower entropy because the outcome is more structurally predictable.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Think of a sandcastle built on a beach. Initially, it is highly structured (low entropy).</p>
+                                <p>Over time, wind and water erode the structure until it becomes an indistinguishable pile of sand (maximum entropy). In trading, entropy measures how fast a market's structure dissolves into pure, unpredictable randomness.</p>
+                            `
+                        },
+                        {
+                            tag: "Quantitative Theory",
+                            term: "Heteroscedasticity vs. Entropy",
+                            academic: `
+                                <p><strong>The Concept:</strong> It is a common quantitative misconception that high volatility (heteroscedasticity) inherently equates to high unpredictability (entropy). In algorithmic systems, this is false. Heteroscedasticity measures the <em>changing variance</em> of data over time, while Entropy measures the <em>informational chaos</em>.</p>
+                                <ul class="meta-list">
+                                    <li><strong>The Quantitative Edge:</strong> The system seeks to identify market regimes exhibiting high heteroscedasticity (massive price swings) that are structurally predictable.</li>
+                                    <li><strong>Execution Application:</strong> If a market maker pulls liquidity and a large swap enters the pool, the resulting price swing is massive (high variance/heteroscedasticity), but the direction is mathematically certain based on the constant product formula $x \\cdot y = k$.</li>
+                                    <li><strong>Resolution:</strong> By isolating these deterministic events, our neural network artificially <strong>lowers the entropy</strong> of the execution window, extracting alpha with near-zero mathematical uncertainty.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Explaining how algorithmic bots make money in chaotic markets requires understanding the difference between a drunkard and a sandcastle.</p>
+                                <p>"Heteroscedasticity" is like a drunkard's walk—sometimes his stumbles are narrow, and sometimes they are wide and erratic. "Entropy" is the sandcastle—it naturally decays into pure, unpredictable chaos.</p>
+                                <p>Our bot looks for moments where the drunkard's stumbling becomes temporarily predictable. We use those brief moments of structural certainty to artificially reduce the chaos (entropy) and execute a guaranteed winning trade.</p>
+                            `
+                        }
+                    ]
+                }
+            ],
+            ru: [
+                {
+                    title: "I. Макроэкономика и Эконометрика",
+                    entries: [
+                        {
+                            tag: "Эконометрика",
+                            term: "Векторная Авторегрессия (VAR) и Импульсная Характеристика",
+                            academic: `
+                                <p><strong>Концепция:</strong> Традиционные науки используют контролируемые эксперименты для фальсификации теорий. В макроэкономике контролируемые эксперименты невозможны. <strong>Векторная авторегрессия (VAR)</strong>, впервые предложенная Кристофером Симсом (Нобелевская премия, 2011), решает эту проблему путем симметричной обработки нескольких переменных временных рядов. Вместо того чтобы навязывать структурные допущения (например, A вызывает B), модели VAR предполагают, что каждая переменная является линейной функцией ее собственных прошлых значений и прошлых значений всех других переменных в системе.</p>
+                                <div class="formula-box">
+                                    $$Y_t = c + A_1 Y_{t-1} + A_2 Y_{t-2} + \\dots + A_p Y_{t-p} + e_t$$
+                                    <em class="text-sm text-gray-400">Где $Y_t$ — вектор переменных, $A$ — матрицы коэффициентов, а $e_t$ — неожиданный шок.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Изоляция "функции импульсного отклика" (Impulse-Response) — отслеживание того, как непредвиденный шок для одной переменной (например, неожиданное повышение процентной ставки) распространяется по всей системе с течением времени.</li>
+                                    <li><strong>Уязвимость:</strong> "Проклятие размерности". Добавление слишком большого количества переменных экспоненциально увеличивает количество параметров, что приводит к переобучению.</li>
+                                    <li><strong>Решение:</strong> Применение строгих критериев длины лага (AIC/BIC) или использование байесовских VAR (BVAR) для сжатия параметров.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте, что вы бросаете большой камень в пруд. Вы хотите точно знать, как отреагирует вода.</p>
+                                <p>Вместо того чтобы пытаться угадать физику воды, модель <strong>VAR</strong> рассматривает миллионы прошлых примеров падения камней в пруды. Она вычисляет, как именно будут формироваться волны, как они будут отражаться от берега и как они будут сталкиваться друг с другом с течением времени.</p>
+                                <p>Это позволяет исследователям изолировать <strong>"Шок"</strong> (камень, ударяющийся о воду) и отслеживать его <strong>"Импульсную характеристику"</strong> (возникающие волны) без необходимости в идеальной физической лаборатории.</p>
+                            `
+                        },
+                        {
+                            tag: "Статистика",
+                            term: "Гетероскедастичность",
+                            academic: `
+                                <p><strong>Концепция:</strong> В стандартных моделях линейной регрессии (OLS) основным допущением является <em>гомоскедастичность</em>: дисперсия ошибки постоянна для всех независимых переменных. <strong>Гетероскедастичность</strong> возникает, когда это допущение нарушается — дисперсия ошибок систематически изменяется по мере изменения значения независимой переменной.</p>
+                                <div class="formula-box">
+                                    $$Var(u_i | X_i) = \\sigma_i^2$$
+                                    <em class="text-sm text-gray-400">(Обратите внимание на индекс $i$ у $\\sigma^2$, указывающий на то, что дисперсия не является постоянной).</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Ценообразование финансовых активов. Волатильность (дисперсия) часто группируется (кластеризуется) и увеличивается по мере роста абсолютной цены актива.</li>
+                                    <li><strong>Уязвимость:</strong> Гетероскедастичность не смещает коэффициенты, но делает стандартные ошибки недействительными, что делает проверку гипотез (P-значения) крайне ненадежной.</li>
+                                    <li><strong>Решение:</strong> Использование стандартных ошибок, устойчивых к гетероскедастичности (например, оценка Уайта), или применение моделей GARCH (Обобщенная авторегрессионная условная гетероскедастичность).</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте, что вы ведете машину. На скорости 15 км/ч руль почти не вибрирует. При 100 км/ч он немного трясется. При 200 км/ч руль вибрирует с огромной силой.</p>
+                                <p>Чем быстрее вы едете, тем шире разброс в стабильности автомобиля. В статистике, когда "тряска" ваших данных становится сильнее по мере увеличения чисел, это называется <strong>Гетероскедастичностью</strong>. Это означает, что вы не можете использовать стандартные линейки для измерения вашего риска.</p>
+                            `
+                        }
+                    ]
+                },
+                {
+                    title: "II. Информатика и Моделирование Данных",
+                    entries: [
+                        {
+                            tag: "Системная Архитектура",
+                            term: "Детерминированное Отображение Состояний и Перекрестное Загрязнение",
+                            academic: `
+                                <p><strong>Концепция:</strong> В высокоасинхронных, параллельных сетевых средах (таких как распределенные реестры или высокочастотные мемпулы) обработка сырых, немаркированных потоков данных ведет к структурной десинхронизации. Если два независимых изменения состояния происходят в рамках одного временного блока, чисто реактивная система может ошибочно сопоставить их, что приведет к "математической галлюцинации".</p>
+                                <div class="formula-box">
+                                    $$Hash_{ID} = \\text{keccak256}(\\text{0xff} \\parallel A_{factory} \\parallel \\text{salt}_{data} \\parallel H_{bytecode})$$
+                                    <em class="text-sm text-gray-400">Детерминированное отображение вывода с использованием устойчивых к коллизиям хэш-параметров CREATE2.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Изоляция независимых финансовых событий. Детерминированно хешируя точный адрес памяти исходного контракта вне сети (off-chain), количественные движки могут помечать каждый входящий пакет данных математически абсолютным ключом.</li>
+                                    <li><strong>Уязвимость:</strong> Сбои лексической сортировки. Если параметры, составляющие <code>salt</code> (например, Token A и Token B), передаются в чередующемся порядке, полученные хэши не совпадут, что нарушит детерминированную карту.</li>
+                                    <li><strong>Решение:</strong> Применение строгой, инвариантной лексической сортировки всех параметров многомерного массива перед криптографическим хэшированием.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте, что вы наблюдаете за оживленным перекрестком. Вы видите, как красная машина отъезжает от обочины, а через миллисекунду видите, как красная машина проносится на красный свет. Ваш мозг может естественно предположить, что это одна и та же машина.</p>
+                                <p>В высокочастотных данных это предположение смертельно опасно. Это <strong>Математическая Галлюцинация</strong>.</p>
+                                <p>Чтобы исправить это, мы перестаем смотреть на цвета машин и начинаем математически сканировать их номерные знаки. Мы заставляем систему сверять номерные знаки за кадром до того, как ей вообще будет позволено сделать вывод, что эти два события связаны. Это полностью изолирует наши данные и не дает алгоритму делать плохие ставки на основе совпадений.</p>
+                            `
+                        },
+                        {
+                            tag: "Машинное Обучение",
+                            term: "Скрытые Марковские Модели (HMM)",
+                            academic: `
+                                <p><strong>Концепция:</strong> Статистическая модель, представляющая систему, которая переходит между различными состояниями с течением времени. В стандартной марковской модели состояние видно напрямую. В <strong>скрытой марковской модели</strong> истинное состояние системы ненаблюдаемо (скрыто), но система генерирует выходные данные (эмиссии), которые <em>можно</em> наблюдать. Модель выводит скрытое состояние строго из распределения вероятностей видимых эмиссий.</p>
+                                <div class="formula-box">
+                                    $$P(Y, X) = P(Y_1|X_1)P(X_1) \\prod_{t=2}^{T} P(Y_t|X_t)P(X_t|X_{t-1})$$
+                                    <em class="text-sm text-gray-400">Где $X$ представляет скрытые состояния, а $Y$ представляет наблюдаемые эмиссии.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Обнаружение рыночного режима (Market Regime). Истинное состояние рынка (например, "Бычий", "Медвежий", "Боковик") скрыто, но мы можем наблюдать эмиссии (цену, объем, волатильность), чтобы вывести текущее состояние.</li>
+                                    <li><strong>Уязвимость:</strong> Вычислительная сложность растет экспоненциально с увеличением количества состояний, а стандартные HMM предполагают, что вероятности переходов никогда не меняются.</li>
+                                    <li><strong>Решение:</strong> Использование алгоритма Витерби для эффективного декодирования наиболее вероятной последовательности скрытых состояний или использование расширений вероятности перехода, изменяющейся во времени (TVTP).</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте, что у вас есть друг, который живет в другом городе, и вы никогда не знаете, какая там погода (<strong>Скрытое состояние</strong>).</p>
+                                <p>Однако ваш друг звонит вам каждый день и рассказывает, во что он одет. Если он говорит "Я в солнцезащитных очках и футболке" (<strong>Наблюдаемая эмиссия</strong>), вы можете математически вычислить, что там, скорее всего, солнечно. Если он говорит "Я взял зонт", вы понимаете, что идет дождь.</p>
+                                <p>HMM — это алгоритм, который использует подсказки, которые мы <em>можем</em> видеть, чтобы выяснить среду, которую мы <em>не можем</em> видеть.</p>
+                            `
+                        },
+                        {
+                            tag: "Глубокое Обучение",
+                            term: "Сети Долгой Краткосрочной Памяти (LSTM)",
+                            academic: `
+                                <p><strong>Концепция:</strong> Традиционные рекуррентные нейронные сети (RNN) страдают от "проблемы исчезающего градиента", что делает их неспособными запоминать долгосрочные зависимости в последовательных данных. <strong>LSTM</strong> решают эту проблему путем внедрения "ячеек памяти" и системы криптографических вентилей (вентили входа, выхода и забывания), которые математически регулируют поток информации, позволяя сети сохранять контекст на протяжении огромных отрезков времени.</p>
+                                <div class="formula-box">
+                                    $$h_t, c_t = \\text{LSTM}(X_t, h_{t-1}, c_{t-1})$$
+                                    <em class="text-sm text-gray-400">Где $h_t$ — скрытое состояние (краткосрочная память), $c_t$ — состояние ячейки (долгосрочная память), а $X_t$ — текущий входной тензор.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Предиктивная классификация потока. Вместо того чтобы реагировать на изолированный дисбаланс книги ордеров, LSTM может принимать тензор временных рядов предыдущих дисбалансов, чтобы предсказать вероятность токсичного события ликвидности за миллисекунды до того, как оно физически произойдет в блокчейне.</li>
+                                    <li><strong>Уязвимость:</strong> Высокая задержка инференса. Жадное выполнение массивных нейронных сетей через стандартные глобальные блокировки интерпретатора (GIL) Python вносит структурную задержку (~15 мс), что фатально для высокочастотного трейдинга.</li>
+                                    <li><strong>Решение:</strong> Сериализация ONNX. Экспорт вычислительного графа PyTorch в статический формат ONNX и его оценка строго через среду выполнения бэкенда C++ (<code>CPUExecutionProvider</code>) для сжатия задержки логического вывода ниже 1 миллисекунды.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте, что вы пытаетесь понять сюжет сложного романа. Если вы помните только то предложение, которое читаете в данный момент (базовая нейронная сеть), история не будет иметь никакого смысла.</p>
+                                <p><strong>LSTM</strong> действует как человек-читатель. Она использует "Вентиль забывания", чтобы отбросить бесполезную информацию (например, цвет рубашки второстепенного персонажа в 1 главе), и "Вентиль входа", чтобы навсегда сохранить критические сюжетные повороты в своей долгосрочной памяти.</p>
+                                <p>Запоминая последовательность событий, предшествующих настоящему моменту, ИИ может активно предсказывать финал сюжета еще до того, как перевернет страницу.</p>
+                            `
+                        },
+                        {
+                            tag: "Искусственный Интеллект",
+                            term: "Генерация с Дополненной Выборкой (RAG)",
+                            academic: `
+                                <p><strong>Концепция:</strong> Большие языковые модели (LLM) обладают обширными обобщенными знаниями, но им не хватает детерминированной точности и контекста конкретной предметной области с точностью до миллисекунды. <strong>Retrieval-Augmented Generation (RAG)</strong> решает эту проблему путем структурного отделения механизма рассуждений от банка памяти. Векторная база данных извлекает релевантную, узкоспециализированную информацию (например, научные PDF-файлы, оперативные финансовые данные) и активно внедряет ее в контекстное окно LLM непосредственно перед логическим выводом.</p>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Динамическая калибровка гиперпараметров. Вместо жесткого кодирования порогов риска ($\\rho$) или математических потолков, система может опрашивать репозиторий эконометрической литературы, чтобы вывести оптимальную конфигурацию во время беспрецедентного структурного сдвига рынка.</li>
+                                    <li><strong>Уязвимость:</strong> Конфликты API и отклонения схемы (Schema Rejections). Принудительное использование жестких форматов вывода JSON (управляемая генерация) часто конфликтует с базовой инфраструктурой поиска (Vector Search), вызывая немедленные отказы API <code>400 INVALID_ARGUMENT</code>.</li>
+                                    <li><strong>Решение:</strong> Аннулирование схемы и асинхронное выполнение. Мы запускаем мост RAG параллельно основному потоку для предотвращения блокировки. Чтобы обойти конфликты API, мы полностью отказываемся от принудительного использования JSON, вместо этого запрашивая строго разделенный необработанный текст (например, <code>RHO=0.015|JUSTIFICATION=...</code>) и используя программное разделение строк (string splitting) на уровне исполнения для извлечения переменных.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте, что у вас есть гениальный, но забывчивый профессор. Если вы зададите ему очень конкретный вопрос о малоизвестной математической статье 1980 года, он может уверенно дать вам неправильный ответ ("галлюцинация").</p>
+                                <p><strong>RAG</strong> — это как дать этому профессору тест с открытой книгой и невероятно быстрого библиотекаря. Библиотекарь (векторная база данных) находит точный абзац в учебнике, передает его профессору и говорит: "Отвечай на вопрос, используя <em>только</em> этот текст".</p>
+                                <p>Это позволяет ИИ принимать высокоточные, основанные на фактах решения, опираясь на специализированную литературу, а не на свою обобщенную тренировочную память.</p>
+                            `
+                        }
+                    ]
+                },
+                {
+                    title: "III. Децентрализованные Финансы (DeFi) и Блокчейн",
+                    entries: [
+                        {
+                            tag: "Микроструктура Рынка",
+                            term: "Концентрированная Ликвидность и JIT-Обеспечение",
+                            academic: `
+                                <p><strong>Концепция:</strong> Устаревшие AMM распределяют ликвидность ($L$) равномерно от цены $0$ до $\\infty$, что приводит к крайней неэффективности капитала. Концентрированная ликвидность (механика V3) позволяет провайдерам привязывать капитал к конкретным, дискретным ценовым диапазонам (тикам). Однако это создает переходные состояния, когда активная ликвидность, защищающая текущую спотовую цену, по сути, равна нулю.</p>
+                                <div class="formula-box">
+                                    $$L_{JIT} = L_{new} \\cdot \\frac{\\tau}{1 - \\tau}$$
+                                    <em class="text-sm text-gray-400">Где $L_{JIT}$ — точная инъекция ликвидности, необходимая для математического размытия существующей ликвидности тика ($L_{new}$) и захвата целевого процента комиссии ($\\tau$).</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Обеспечение ликвидности "Точно в срок" (JIT):</strong> Вместо пассивного поглощения непостоянных потерь с течением времени, алгоритмический оператор может отследить ожидающий своп розничного клиента, мгновенно <em>опередить</em> его (front-run), создав $L_{JIT}$ точно на текущем тике, поглотить комиссию за своп и мгновенно <em>следовать за ним</em> (back-run), чтобы сжечь ликвидность в том же блоке.</li>
+                                    <li><strong>Уязвимость:</strong> Обычные фронтраннеры (generalized front-runners), ворующие JIT-нагрузку.</li>
+                                    <li><strong>Решение:</strong> Исполнение сэндвича из 3 транзакций (Mint &rarr; Target Swap &rarr; Burn) исключительно через криптографические бандлы, отправляемые приватным сборщикам блоков.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Старые децентрализованные биржи были похожи на размазывание крошечного кусочка масла по километровому куску тоста. Это работало, но в каждом укусе вы почти не чувствовали масла.</p>
+                                <p>Современные биржи позволяют людям концентрировать огромные куски масла на одном ломтике. Но если кто-то откусит <em>рядом</em> с этим ломтиком, он ничего не получит, и рынок ненадолго рухнет.</p>
+                                <p><strong>JIT Ликвидность</strong> — это алгоритмический трюк. Бот видит клиента, собирающегося откусить от пустого куска. За долю секунды бот подкладывает огромный кусок масла под его нож, забирает комиссию биржи за предоставление масла и мгновенно забирает оставшееся масло обратно до того, как кто-либо еще сможет к нему прикоснуться. Нулевой долгосрочный риск, 100% комиссии.</p>
+                            `
+                        },
+                        {
+                            tag: "Архитектура DeFi",
+                            term: "Автоматизированные Маркет-Мейкеры (AMM) и Роутеры",
+                            academic: `
+                                <p><strong>Концепция:</strong> Традиционные биржи полагаются на центральные книги лимитных ордеров (CLOB), сопоставляющие покупателей и продавцов. <strong>AMM</strong> — это автономные смарт-контракты, хранящие резервы двух или более токенов. Они способствуют совершению сделок без разрешений (permissionless) с использованием детерминированных математических формул, самой популярной из которых является формула постоянного произведения.</p>
+                                <div class="formula-box">
+                                    $$x \\cdot y = k$$
+                                    <em class="text-sm text-gray-400">Где $x$ — резерв Токена А, $y$ — резерв Токена В, а $k$ — константа.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Роутеры (Routers):</strong> Вспомогательные контракты, которые прокладывают пути исполнения. Поскольку прямого пула для "Токен А в Токен С" может не существовать, Роутер алгоритмически перескакивает через промежуточные пулы (например, A &rarr; B &rarr; C) для выполнения сделки.</li>
+                                    <li><strong>Уязвимость:</strong> "Проскальзывание" (влияние крупных сделок на цену) и "Непостоянные потери" (Impermanent Loss - потеря на дивергенции для провайдеров ликвидности). Более того, публичные пути исполнения уязвимы для MEV сэндвич-атак.</li>
+                                    <li><strong>Решение:</strong> Концентрированная ликвидность (AMM V3) для углубления эффективности капитала на конкретных ценовых тиках; применение строгих параметров проскальзывания <code>amountOutMinimum</code> в нагрузке Роутера.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Подумайте об AMM как о роботизированном кассире, стоящем за стойкой с двумя ведрами: одно полно яблок, другое полно апельсинов.</p>
+                                <p>Единственное правило робота — общая ценность обоих ведер должна оставаться сбалансированной. Если кто-то покупает много яблок, ведро с яблоками пустеет. Чтобы восстановить баланс, робот автоматически поднимает цену на яблоки и снижает цену на апельсины, чтобы привлечь продавцов яблок. Вмешательство человека не требуется.</p>
+                                <p><strong>Роутер</strong> — это GPS. Если вы хотите обменять бананы на яблоки, но робот принимает только апельсины, Роутер автоматически обменяет ваши бананы на апельсины ниже по улице, принесет их роботу и достанет вам яблоки за один безупречный шаг.</p>
+                            `
+                        },
+                        {
+                            tag: "Микроструктура Рынка",
+                            term: "Дискретные Ценовые Границы (Интервал Тиков)",
+                            academic: `
+                                <p><strong>Концепция:</strong> В современных средах Концентрированной Ликвидности цена не может быть выражена как бесконечно непрерывный спектр. Ценовая кривая строго разделена на дискретные, измеримые интервалы, называемые "тиками" (ticks). Что критически важно, математическая ширина этих тиков (<strong>Tick Spacing</strong>) жестко привязана к уровню комиссии пула ликвидности для оптимизации под стандартную рыночную дисперсию.</p>
+                                <div class="formula-box">
+                                    $$tick_{lower} = \\lfloor \\frac{tick_{current}}{spacing} \\rfloor \\times spacing$$
+                                    <em class="text-sm text-gray-400">Где $spacing$ продиктовано параметрами пула (например, пул с комиссией 0.05% = 10 тиков, пул 0.30% = 60 тиков).</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Правильное структурное выравнивание JIT-ликвидности. Вы не можете предоставить ликвидность через произвольный ценовой диапазон; он должен строго привязываться к предопределенным границам, установленным матрицей интервалов тиков пула.</li>
+                                    <li><strong>Уязвимость:</strong> Отказы на границах (Boundary Reversions). Выполнение полезной нагрузки, которая пытается наложить логику интервала 0.30% (60) на пул 0.05% (10), вызовет немедленный возврат (revert) EVM, в результате чего сборщик блоков отбросит весь бандл.</li>
+                                    <li><strong>Решение:</strong> Динамические Матрицы Интервалов Тиков. Алгоритмическое ядро должно программно извлекать точный <code>feeTier</code> из автомата состояний и динамически вычислять функции пола $tick_{lower}$ и $tick_{upper}$ перед маршрутизацией calldata.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Думайте о цене актива не как о гладком пандусе, а как о лестнице.</p>
+                                <p>Если вы торгуете очень стабильными активами (например, двумя разными долларовыми монетами), лестница имеет невероятно маленькие, миллиметровые ступеньки (пул с комиссией 0.01%). Вы можете положить свои деньги почти точно туда, куда хотите. Если вы торгуете дикими, волатильными криптотокенами, у лестницы огромные, полуметровые ступени (пул 1.00%).</p>
+                                <p>Вы не можете разместить свои деньги парящими в воздухе между двумя ступеньками. Вы должны твердо поставить их на существующую ступеньку, иначе биржа вообще отклонит ваши деньги.</p>
+                            `
+                        },
+                        {
+                            tag: "Механика DeFi",
+                            term: "Флеш-Кредиты (Flash Loans) и Кросс-AMM Арбитраж",
+                            academic: `
+                                <p><strong>Концепция:</strong> Традиционный арбитраж требует значительного покоящегося капитала (resting capital) для использования ценовой неэффективности на разных рынках. <strong>Флеш-Кредиты</strong> устраняют это требование, позволяя операторам заимствовать практически неограниченные, необеспеченные активы из протокола кредитования при условии, что основная сумма и микрокомиссия будут возвращены в рамках того же самого блока EVM.</p>
+                                <div class="formula-box">
+                                    $$\\Delta x^* = \\frac{\\sqrt{\\gamma_1 \\gamma_2 x_1 y_2 x_2 y_1} - x_1 x_2}{\\gamma_1 x_2 + \\gamma_1 \\gamma_2 y_1}$$
+                                    <em class="text-sm text-gray-400">Где $\\Delta x^*$ — оптимальный размер займа для математической максимизации прибыли между двумя разрозненными AMM с постоянным произведением с множителями комиссий $\\gamma$ и соответствующими резервами $x, y$.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Извлечение выгоды из экстремальных ценовых дислокаций между фрагментированными пулами ликвидности (например, Пул А против Пула В) без подвергания портфельного капитала риску рыночной дельты.</li>
+                                    <li><strong>Уязвимость:</strong> Откат транзакции (Transaction Reversion). Если многоступенчатый маршрут (multi-hop routing) не приносит достаточного дохода для покрытия комиссии за кредит и связанных с этим затрат на газ, EVM откатывает всю транзакцию.</li>
+                                    <li><strong>Решение:</strong> Применение строгих, детерминированных границ прибыльности ($\\Delta x_{out} \\ge \\phi + \\epsilon$) внутри смарт-контракта исполнения перед инициацией погашения долга.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте, что вы заходите в банк и просите одолжить десять миллионов долларов ровно на 12 секунд, без проверки кредитоспособности и без залога.</p>
+                                <p>Вы используете эти деньги, чтобы мгновенно купить редкую картину в Лондоне и продать ее по более высокой цене в Нью-Йорке. Вы возвращаете десять миллионов банку, платите небольшую комиссию и оставляете себе прибыль.</p>
+                                <p>Если вы обнаружите, что не можете продать картину с прибылью, банк использует волшебную машину времени, чтобы перемотать вселенную на 12 секунд назад, делая вид, что кредита никогда и не было. Из-за того, как работает блокчейн, вы физически не можете потерять заемные деньги.</p>
+                            `
+                        },
+                        {
+                            tag: "Сетевая Физика",
+                            term: "Максимально Извлекаемая Ценность (MEV)",
+                            academic: `
+                                <p><strong>Концепция:</strong> Блокчейны не обрабатываются одновременно; транзакции находятся в публичной комнате ожидания, называемой "мемпул" (mempool), прежде чем будут объединены в блок сборщиком/майнером. <strong>MEV</strong> — это прибыль, которую эти участники могут извлечь путем произвольного изменения порядка, вставки или цензурирования этих транзакций. Когда высокоприбыльная полезная нагрузка исполнения транслируется публично, обычные боты-фронтраннеры моделируют сделку, дублируют ее и отправляют с более высокой приоритетной взяткой за газ.</p>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Защита рассчитанной альфы. Математически совершенный скрипт исполнения бесполезен, если транзакция становится "сэндвичем" или крадется в публичном мемпуле до включения в блок.</li>
+                                    <li><strong>Уязвимость:</strong> Фронтраннеры постоянно мониторят мемпул на предмет полезных нагрузок <code>targetRouter.call()</code>, декодируя векторы исполнения, чтобы украсть спред.</li>
+                                    <li><strong>Решение:</strong> Приватные реле RPC (например, Flashbots). Обход публичного мемпула путем отправки криптографических бандлов исполнения напрямую приватным сборщикам блоков в сопровождении чаевых (взятки) для гарантированного, атомарного включения.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте, что вы играете в покер по высоких ставках, но вынуждены положить свои карты на стол лицом вверх, прежде чем сделать последнюю ставку.</p>
+                                <p>Другие игроки (MEV-боты) видят, что у вас выигрышная комбинация. Они мгновенно подкупают дилера (сборщика блоков), чтобы он позволил им разыграть вашу же комбинацию до вас, крадя ваш выигрыш прямо из-под вашего носа.</p>
+                                <p>Чтобы исправить это, системы используют <strong>Приватную Маршрутизацию</strong>. Вместо того чтобы играть в открытую, мы передаем наши карты и небольшие чаевые прямо дилеру в запечатанном конверте. Если наша рука выигрывает, дилер забирает чаевые. Если проигрывает, дилер бросает конверт в мусорную корзину.</p>
+                            `
+                        },
+                        {
+                            tag: "Инфраструктура EVM",
+                            term: "Смарт-Контракты и Исполнение Состояний",
+                            academic: `
+                                <p><strong>Концепция:</strong> Смарт-контракты — это неизменяемые, детерминированные программы, развернутые в распределенном реестре. В виртуальной машине Ethereum (EVM) эти контракты хранят состояние (переменные) и логику (скомпилированный байт-код).</p>
+                                <p>Взаимодействие с EVM принимает две различные формы:</p>
+                                <ul class="meta-list">
+                                    <li><strong>Чтение Состояния (<code>staticCall</code> / <code>eth_call</code>):</strong> Запрос текущего состояния блокчейна. Это требует нулевого криптографического консенсуса, стоит ноль газа и выполняется за миллисекунды через узлы RPC.</li>
+                                    <li><strong>Запись Состояния (Транзакции):</strong> Изменение состояния блокчейна. Это требует криптографических подписей, потребляет сетевой "Газ" (вычислительную комиссию) и должно быть подтверждено децентрализованными секвенсорами/майнерами.</li>
+                                    <li><strong>Уязвимость:</strong> Ошибочная логика состояния может привести к атакам повторного входа (Reentrancy Attacks - прерывание выполнения до обновления состояния) или манипуляциям с оракулом (обман данных о ценах в контракте).</li>
+                                    <li><strong>Решение:</strong> Паттерны проверки-эффекты-взаимодействия (Checks-Effects-Interactions), защита от повторного входа и использование децентрализованных оракулов средневзвешенной по времени цены (TWAP).</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Смарт-контракт — это цифровой торговый автомат.</p>
+                                <p>Любой может посмотреть через стекло, чтобы увидеть, сколько конфет внутри, или проверить ценник. Смотреть через стекло совершенно бесплатно и мгновенно (<strong>Чтение Состояния</strong>).</p>
+                                <p>Однако, если вы хотите купить конфету, вы должны вставить деньги, нажать кнопки и подождать, пока механические шестеренки не выдадут товар. Вы не можете передумать на полпути. Это механическое действие стоит электричества и занимает несколько секунд (<strong>Запись Состояния</strong>).</p>
+                            `
+                        },
+                        {
+                            tag: "Симуляция Состояния",
+                            term: "Детерминированный Локальный Форк (Shadow EVM)",
+                            academic: `
+                                <p><strong>Концепция:</strong> Тестирование сложных многотранзакционных алгоритмических стратегий в живом блокчейне сопряжено с неприемлемым риском для капитала. <strong>Детерминированный Локальный Форк</strong> (Shadow EVM) решает эту проблему путем копирования точного состояния (балансы, смарт-контракты, переменные) живого блокчейна (например, Ethereum) на определенной высоте блока в локализованную приватную среду. Это создает "Теневую EVM", где разработчики могут детерминированно симулировать транзакции, не платя реальные комиссии за газ и не раскрывая стратегии публике.</p>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Симуляция MEV-бандлов, валидация границ смарт-контрактов и тестирование высокочастотных путей маршрутизации.</li>
+                                    <li><strong>Уязвимость:</strong> Асфиксия оборудования (Hardware Asphyxiation). Дерево состояний Ethereum огромно. Кэширование тысяч переменных mainnet в локальной среде выполнения требует огромной физической памяти, что часто приводит к сбоям стандартных облачных серверов (Out-Of-Memory) во время компиляции состояния.</li>
+                                    <li><strong>Решение:</strong> Использование виртуальных машин с большим объемом памяти (например, минимум 4 ГБ+ RAM для базовых форков) и жесткая привязка симуляций к статическому номеру блока для предотвращения динамического смещения состояния.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте, что вы планируете ограбление банка по высоким ставкам (легально, конечно), и вам нужно точно знать, сколько времени уходит на закрытие двери хранилища.</p>
+                                <p>Вместо того, чтобы гадать в день ограбления, вы строите идеальную копию банка в масштабе 1 к 1 на складе. Вы можете тестировать свой план сотни раз, терпеть неудачи, восстанавливать комнату и пытаться снова, никогда не рискуя попасть в тюрьму. Это <strong>Shadow EVM</strong>. Это идеальный клон блокчейна, работающий исключительно на вашем собственном приватном компьютере.</p>
+                            `
+                        },
+                        {
+                            tag: "Инфраструктура EVM",
+                            term: "Зависимости Внутриблочного Состояния (Парадокс Последовательности)",
+                            academic: `
+                                <p><strong>Концепция:</strong> Продвинутые алгоритмические стратегии (например, бандлы Flashbots) часто требуют выполнения нескольких транзакций в определенной, неразрывной последовательности в рамках одного блока. Парадокс возникает, когда более поздняя транзакция опирается на данные, сгенерированные более ранней транзакцией в том же бандле (например, Транзакции 3 нужен ID NFT, отчеканенного в Транзакции 1). Поскольку все транзакции должны быть криптографически подписаны <em>до</em> отправки, динамические переменные не могут быть жестко закодированы в calldata финальной транзакции.</p>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Сэндвичи JIT-ликвидности (Mint &rarr; Target Swap &rarr; Burn). Функция сжигания (burn) должна знать, что именно было только что отчеканено (minted).</li>
+                                    <li><strong>Уязвимость:</strong> Отказ бандла. Отправка неполных или неопределенных calldata приведет к сбою симуляции EVM, удалив всю последовательность из нескольких транзакций из блока.</li>
+                                    <li><strong>Решение:</strong> Переходное состояние контракта (Transient Contract State). Инжиниринг смарт-контракта исполнения для временного хранения динамически сгенерированного ID в его собственной внутренней памяти во время Транзакции 1, что позволяет Транзакции 3 считывать его напрямую из состояния контракта вместо того, чтобы требовать его во внешней полезной нагрузке calldata.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте, что вы отправляете запечатанный конверт с тремя инструкциями вашему биржевому брокеру:</p>
+                                <p>1. Открыть новый секретный банковский счет.<br>2. Пусть клиент внесет 100 долларов на этот секретный счет.<br>3. Снять 100 долларов с секретного счета и отдать их мне.</p>
+                                <p>Проблема в следующем: как написать Инструкцию 3, если вы еще не знаете номер счета? Вы не можете написать его на бумаге, потому что конверт уже запечатан. <strong>Решение:</strong> Вы изменяете Инструкцию 3 на такую: <em>"Снимите 100 долларов с любого счета, который вы только что открыли в Инструкции 1."</em> Вы полагаетесь на внутреннюю память брокера, а не даете ему точный номер.</p>
+                            `
+                        }
+                    ]
+                },
+                {
+                    title: "IV. Математика Управления Капиталом",
+                    entries: [
+                        {
+                            tag: "Теория Риска",
+                            term: "Критерий Келли",
+                            academic: `
+                                <p><strong>Концепция:</strong> Математическая формула, используемая для определения оптимального размера серии ставок или инвестиций с целью максимизации логарифма богатства (долгосрочного темпа сложного роста).</p>
+                                <div class="formula-box">
+                                    $$f^* = p - \\frac{q}{b}$$
+                                    <em class="text-sm text-gray-400">Где $f^*$ — доля капитала для ставки, $p$ — вероятность выигрыша, $q$ — вероятность проигрыша ($1-p$), а $b$ — шансы выплаты.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Определение абсолютного максимального размера позиции. Если алгоритм имеет 60% винрейт и соотношение риск/прибыль 1:1, Келли предписывает делать ставку ровно 20% банкролла на каждую сделку.</li>
+                                    <li><strong>Уязвимость:</strong> "Полный Келли" (Full Kelly) гарантирует математически верную просадку (drawdown) в 50% в какой-то момент времени. Более того, он предполагает, что вероятности ($p$) известны с абсолютной уверенностью, что невозможно на финансовых рынках.</li>
+                                    <li><strong>Решение:</strong> "Дробный Келли" (Fractional Kelly) (например, Половина Келли или Четверть Келли). Это кардинально снижает волатильность просадки, жертвуя лишь незначительной суммой сложного роста.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Если у вас есть поддельная монета, которая выпадает Орлом в 60% случаев, вы, очевидно, хотите делать ставки на Орла. Но какую часть своих денег вы ставите?</p>
+                                <p>Если вы ставите 100% своих денег каждый раз, вы в конечном итоге выпадете Решкой и обанкротитесь. Если вы ставите 1 доллар каждый раз, вы тратите свое преимущество впустую. <strong>Критерий Келли</strong> — это точный математический ответ. Он подскажет вам идеальный процент от вашего банкролла для ставки, чтобы ваши деньги росли как можно быстрее, но при этом вы никогда не достигли нуля.</p>
+                            `
+                        },
+                        {
+                            tag: "Количественный Размер Позиции",
+                            term: "Размер Позиции с Учетом Волатильности (Правило Экхардта)",
+                            academic: `
+                                <p><strong>Концепция:</strong> Распределение капитала не должно быть равным для всех активов; оно должно быть обратно пропорционально волатильности актива в реальном времени. Популяризированная Ричардом Экхардтом, эта теория гарантирует, что <em>влияние риска</em> каждой позиции на портфель остается одинаковым, независимо от поведения базового актива.</p>
+                                <div class="formula-box">
+                                    $$Размер Позиции = \\frac{Капитал Счета \\times \\% Риска}{Волатильность (ATR или \\sigma)}$$
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Балансировка портфеля, содержащего как активы с высокой дисперсией (например, криптовалюты малой капитализации), так и активы с низкой дисперсией (например, облигации или акции крупной капитализации).</li>
+                                    <li><strong>Уязвимость:</strong> Опирается на исторические окна ретроспективного анализа (например, 14-дневный ATR). Если актив подвергается беспрецедентному структурному шоку волатильности ("Черный лебедь"), историческое стандартное отклонение не сможет защитить портфель.</li>
+                                    <li><strong>Решение:</strong> Внедрение динамически сужающихся окон ретроспективного анализа в периоды рыночного стресса или введение абсолютных жестких стоп-процентов, не зависящих от расчетной волатильности.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте, что вы выгуливаете двух собак: спокойного Золотистого ретривера и энергичного, непредсказуемого Джек-рассел-терьера.</p>
+                                <p>Если вы дадите им обоим поводок в 3 метра, терьер вытащит вас на дорогу. <strong>Правило Экхардта</strong> гласит, что вы должны регулировать длину поводка в зависимости от поведения собаки. Спокойной собаке вы даете 3 метра свободы, но дикой собаке вы даете только полметра.</p>
+                                <p>В финансах, если актив сильно колеблется, вы покупаете его меньше. Если он спокоен, вы покупаете больше. Это сохраняет ваш общий стресс в точном равновесии.</p>
+                            `
+                        },
+                        {
+                            tag: "Теория Риска",
+                            term: "Парадокс Направленного Инвентаря (Непостоянные Потери - Impermanent Loss)",
+                            academic: `
+                                <p><strong>Концепция:</strong> В автоматическом маркет-мейкинге (AMM) обеспечение ликвидности подвергает провайдера сдвигам направленного инвентаря. Когда пользователь торгует против пула ликвидности, он извлекает один актив и вносит другой, фундаментально изменяя соотношение активов провайдера. Если цена извлеченного актива растет на внешних рынках, провайдер несет альтернативные издержки по сравнению с простым удержанием (HODL) исходных активов. Это известно как <strong>Непостоянные потери (Impermanent Loss, IL)</strong>.</p>
+                                <div class="formula-box">
+                                    $$IL(k) = \\frac{2\\sqrt{k}}{1+k} - 1$$
+                                    <em class="text-sm text-gray-400">Где $k$ — отношение новой цены к начальной. Это количественно определяет потерю на дивергенции.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Оценка истинной прибыльности JIT (Just-In-Time) обеспечения ликвидности. Извлеченная комиссия за своп должна строго превышать непостоянные потери, понесенные во время направленного сдвига инвентаря.</li>
+                                    <li><strong>Уязвимость:</strong> Микроскопическое математическое смещение. Если стратегия чеканит ликвидность на произвольных ценовых тиках, а не динамически вычисляет точные оптимальные границы, возникающие непостоянные потери могут мгновенно затмить собранные комиссии.</li>
+                                    <li><strong>Решение:</strong> Строгие ончейн границы прибыльности. Программирование смарт-контракта на расчет общей базовой стоимости активов после извлечения и откат (revert) всей транзакции через <code>CALL_EXCEPTION</code>, если окончательный баланс ниже начального баланса плюс целевая маржа.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте, что вы управляете обменным пунктом в аэропорту. Вы начинаете смену с 100 евро и 100 долларов.</p>
+                                <p>Внезапно появляются важные новости, и евро становится чрезвычайно ценным. Толпа путешественников бросается к вашей кабинке, покупая все ваши евро и вручая вам доллары. Вы собрали крошечную комиссию за каждую сделку, и это здорово! Но в конце дня в вашей кабинке 0 евро и 200 долларов. Поскольку евро взлетел до небес, если бы вы просто остались дома и сохранили свои первоначальные 100 евро, вы были бы намного богаче.</p>
+                                <p>Это <strong>Непостоянные потери</strong>. Это невидимая стоимость того, что вас заставляют продавать, когда все остальные хотят покупать.</p>
+                            `
+                        },
+                        {
+                            tag: "Теория Исполнения",
+                            term: "Исполнение по Чистой Ожидаемой Стоимости (NEV)",
+                            academic: `
+                                <p><strong>Концепция:</strong> В среде децентрализованного реестра вычислительное выполнение является физическим товаром с колеблющимися рыночными ценами (Газ). Теоретически совершенный математический арбитраж полностью недействителен, если стоимость доступа к уровню исполнения превышает извлеченную альфу. <strong>Чистая ожидаемая стоимость (Net-Expected-Value, NEV)</strong> связывает чистую математическую прибыль с физической сетевой физикой.</p>
+                                <div class="formula-box">
+                                    $$\\Pi_{NEV} = E[\\text{Валовая Прибыль}] - (\\text{Лимит Газа} \\times (\\text{Базовая Комиссия} + \\text{Приоритетная Комиссия})) > 0$$
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Фильтры исполнения с нулевым доверием (Zero-Trust). Прежде чем алгоритмическая система подпишет криптографический бандл, она должна сопоставить прогнозируемые взятки разработчикам (builders) и базовые сетевые сборы с ожидаемой доходностью от торговли.</li>
+                                    <li><strong>Уязвимость:</strong> Приоритетные газовые аукционы (PGA). В периоды высокой нагрузки на сеть <code>PriorityFee</code>, необходимая для обеспечения включения в блок, может расти гиперболически, мгновенно превращая прибыльную сделку в массивные потери капитала.</li>
+                                    <li><strong>Решение:</strong> Динамические потоки телеметрии. Механизм исполнения постоянно извлекает данные <code>baseFeeGwei</code> в реальном времени и автоматически прерывает передачу полезной нагрузки, если $\\Pi_{NEV} \\le 0$, защищая базовый операционный капитал.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте, что вы нашли магазин, где продают 10-долларовую купюру всего за 5 долларов. Математически это безупречная сделка; вам гарантирована прибыль в 5 долларов.</p>
+                                <p>Однако магазин находится на другой стороне моста, а оператор моста берет за проезд 6 долларов. Если вы смотрите только на математику сделки, вы ее совершаете и в итоге теряете 1 доллар. Именно так торговые боты медленно сливают свои банкроллы.</p>
+                                <p><strong>Чистая ожидаемая стоимость</strong> заставляет бота рассчитать "плату за проезд" (комиссии за транзакции в сети и взятки) <em>до</em> совершения сделки. Если проезд стоит больше, чем прибыль, бот отказывается переходить мост.</p>
+                            `
+                        }
+                    ]
+                },
+                {
+                    title: "V. Прикладная Криптография и Системы с Нулевым Разглашением",
+                    entries: [
+                        {
+                            tag: "Криптография",
+                            term: "Машинное Обучение с Нулевым Разглашением (ZKML) и SNARKs",
+                            academic: `
+                                <p><strong>Концепция:</strong> Краткий Неинтерактивный Аргумент Знания с Нулевым Разглашением (ZK-SNARK) позволяет "Доказывающему" (Prover) математически продемонстрировать "Проверяющему" (Verifier), что конкретное вычисление было выполнено правильно, не раскрывая входные данные или внутреннюю логику. В ZKML нейронная сеть компилируется в криптографическую схему, доказывая, что проприетарный ИИ правильно оценил данные.</p>
+                                <div class="formula-box">
+                                    $$\\pi = Prove(Circuit(X_{public}, W_{private}) == Y_{public})$$
+                                    <em class="text-sm text-gray-400">Где $\\pi$ — криптографическое доказательство, $X_{public}$ — рыночные данные, $W_{private}$ — секретные веса модели, а $Y_{public}$ — прогноз.</em>
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Сохранение торговой альфы. Количественный фонд может доказать смарт-контракту блокчейна, что их ИИ точно оценил сделку, никогда не раскрывая секретные формулы нейронной сети конкурентам.</li>
+                                    <li><strong>Уязвимость:</strong> Архитектурная жесткость. Криптографические схемы — это полиномиальные сетки без состояния (stateless), работающие в конечных полях простых чисел. Они фундаментально не могут обрабатывать динамическое выделение памяти, временные циклы (как LSTM) или нелинейную математику с плавающей запятой (например, квадратные корни).</li>
+                                    <li><strong>Решение:</strong> Математическое Сглаживание (Flattening). Преобразование динамических нейронных сетей временных рядов в строго статические многослойные перцептроны прямого распространения (MLP), замена нелинейных функций квантованными таблицами поиска (LUT) и чисто операциями сложения/умножения.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте себе волшебную головоломку Судоку. Вы хотите доказать кому-то, что решили ее, но отказываетесь показывать им цифры, которые вы написали.</p>
+                                <p><strong>ZK-SNARK</strong> — это математический замок, который гарантирует, что вы решили ее правильно, сохраняя ваши конкретные ответы в полной тайне. В чем подвох? Замок невероятно жесткий. Вы не можете использовать сложные компьютерные циклы или динамическую память для его решения; вы должны "сгладить" весь свой мыслительный процесс до базового сложения и умножения, чтобы замок мог его проверить.</p>
+                            `
+                        },
+                        {
+                            tag: "Системная Инженерия",
+                            term: "Сериализация ONNX и Гармонизация Зависимостей",
+                            academic: `
+                                <p><strong>Концепция:</strong> Связывание высокоуровневых фреймворков машинного обучения (таких как PyTorch или TensorFlow) с низкоуровневыми аппаратными ускорителями или криптографическими бэкендами требует промежуточного формата представления, такого как Open Neural Network Exchange (ONNX). Компиляторы навязывают строгие наборы операций (Opsets) для стандартизации представления математических узлов.</p>
+                                <div class="formula-box">
+                                    $$PyTorch (Dynamic Graph) \\xrightarrow{JIT} ONNX (Opset X) \\xrightarrow{Tract} SNARK Circuit$$
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Перевод высокоуровневого алгоритма торговли на Python в низкоуровневую криптографическую схему на базе C++ или Rust для выполнения со сверхнизкой задержкой.</li>
+                                    <li><strong>Уязвимость:</strong> Повреждение метаданных при понижении версии. Современные компиляторы (такие как PyTorch Dynamo) форсируют использование новейших наборов Opsets (например, Opset 18), которые несовместимы со строгими криптографическими парсерами, требующими более старых, проверенных структур (например, Opset 14). Просьба к современному компилятору математически "понизить" файл неизбежно повреждает метаданные графа.</li>
+                                    <li><strong>Решение:</strong> Нативная Устаревшая Компиляция. Принудительное понижение версии исходного фреймворка (например, возврат к PyTorch 1.13.1 LTS) для использования устаревших JIT-компиляторов C++, которые изначально (natively) выдают неповрежденные, удобные для парсера графы.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте, что вы пишете книгу на современном интернет-сленге, но единственная доступная печатная машина понимает исключительно формальный английский времен Шекспира.</p>
+                                <p>Если вы используете автоматический переводчик, чтобы "понизить" сленг до старого английского, это нарушает грамматику, и печатная машина заклинивает. Решение заключается не в том, чтобы починить сломанный переводчик; решение состоит в том, чтобы написать оригинальную книгу с использованием старой пишущей машинки, которая <em>изначально</em> печатает на шекспировском английском, гарантируя, что печатная машина отпечатает ее безупречно.</p>
+                            `
+                        },
+                        {
+                            tag: "Компьютерные Науки",
+                            term: "Межъязыковая Асинхронность и Состояние Гонки (Race Conditions)",
+                            academic: `
+                                <p><strong>Концепция:</strong> Высокопроизводительные системы часто связывают языки программирования для оптимизации (например, Python для приема данных, Rust для криптографических вычислений). Когда низкоуровневые языки выполняют фоновые задачи (например, получение огромного файла криптографических настроек с сервера), они возвращают чужеродный асинхронный примитив (например, "Future" в Rust) языку высокого уровня.</p>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Загрузка огромных структурированных ссылочных строк (Structured Reference Strings - SRS) через биндинги Rust (PyO3) в скрипт исполнения на Python для компиляции ZK-SNARK.</li>
+                                    <li><strong>Уязвимость:</strong> Слепые Зоны Проверки Типов. Стандартные инструменты Python <code>asyncio</code> могут оценивать чужеродные Rust "Futures" как синхронные, заставляя скрипт бежать вперед и пытаться прочитать с жесткого диска файл, который все еще скачивается в фоновом режиме, что приводит к фатальному сбою.</li>
+                                    <li><strong>Решение:</strong> Глубокая Инспекция Объектов. Использование расширенных модулей проверки (<code>inspect.isawaitable()</code>), которые динамически распознают межъязыковые awaitable-объекты, а не полагаются строго на проверки нативных корутин, что заставляет поток выполнения безопасно блокироваться.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Представьте, что вы готовите ужин. Вы просите своего су-шефа (который говорит на другом языке) сходить в магазин и купить муку. Он кивает и уходит.</p>
+                                <p>Поскольку вы не совсем поняли его кивок, вы предполагаете, что он мгновенно положил муку на стол, поэтому вы сразу же пытаетесь начать печь торт. Кухня загорается, потому что вы на самом деле не дождались его возвращения.</p>
+                                <p>Чтобы исправить это, вы устанавливаете строгий, универсальный жест рукой, который заставляет вас физически заморозить все, что вы делаете, пока мука не окажется прямо в ваших руках.</p>
+                            `
+                        }
+                    ]
+                },
+                {
+                    title: "VI. Теоретические Концепции",
+                    entries: [
+                        {
+                            tag: "Теория Информации",
+                            term: "Энтропия Шеннона",
+                            academic: `
+                                <p><strong>Концепция:</strong> Происходящая из теории информации и термодинамики, <strong>Энтропия ($H$)</strong> — это математическая мера фундаментальной неопределенности, хаоса или "ожидаемого сюрприза" (expected surprisal) в системе.</p>
+                                <div class="formula-box">
+                                    $$H(X) = - \\sum_{i=1}^{n} P(x_i) \\log_2 P(x_i)$$
+                                </div>
+                                <ul class="meta-list">
+                                    <li><strong>Применение:</strong> Измерение фундаментальной непредсказуемости ожидающих переходов состояния EVM и рыночного шума.</li>
+                                    <li><strong>Рыночный Контекст:</strong> Идеально честное подбрасывание монеты (50/50) имеет максимальную энтропию (1 бит), потому что результат совершенно непредсказуем. Монета со смещенным центром тяжести (например, 90/10) имеет более низкую энтропию, потому что результат более структурно предсказуем.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Подумайте о замке из песка, построенном на пляже. Изначально он высокоструктурирован (низкая энтропия).</p>
+                                <p>Со временем ветер и вода размывают конструкцию, пока она не превращается в неразличимую кучу песка (максимальная энтропия). В трейдинге энтропия измеряет, насколько быстро структура рынка растворяется в чистой, непредсказуемой случайности.</p>
+                            `
+                        },
+                        {
+                            tag: "Квантитативная Теория",
+                            term: "Гетероскедастичность против Энтропии",
+                            academic: `
+                                <p><strong>Концепция:</strong> Распространенным заблуждением в количественном анализе является мнение, что высокая волатильность (гетероскедастичность) по своей сути приравнивается к высокой непредсказуемости (энтропии). В алгоритмических системах это неверно. Гетероскедастичность измеряет <em>изменяющуюся дисперсию</em> данных во времени, в то время как Энтропия измеряет <em>информационный хаос</em>.</p>
+                                <ul class="meta-list">
+                                    <li><strong>Преимущество:</strong> Система стремится выявить рыночные режимы, демонстрирующие высокую гетероскедастичность (огромные колебания цен), которые структурно предсказуемы.</li>
+                                    <li><strong>Практическое Применение:</strong> Если маркет-мейкер выводит ликвидность, а в пул поступает крупный своп, возникающее колебание цены будет огромным (высокая дисперсия/гетероскедастичность), но направление математически определено на основе формулы постоянного произведения $x \\cdot y = k$.</li>
+                                    <li><strong>Решение:</strong> Изолируя эти детерминированные события, наша нейронная сеть искусственно <strong>снижает энтропию</strong> окна исполнения, извлекая альфу с почти нулевой математической неопределенностью.</li>
+                                </ul>
+                            `,
+                            plain: `
+                                <p>Объяснение того, как алгоритмические боты зарабатывают деньги на хаотичных рынках, требует понимания разницы между пьяницей и замком из песка.</p>
+                                <p>"Гетероскедастичность" подобна походке пьяницы: иногда он спотыкается чуть-чуть, а иногда сильно и хаотично. "Энтропия" — это замок из песка: он естественно распадается в чистый, непредсказуемый хаос.</p>
+                                <p>Наш бот ищет моменты, когда спотыкание пьяницы становится временно предсказуемым. Мы используем эти короткие моменты структурной определенности, чтобы искусственно уменьшить хаос (энтропию) и совершить гарантированно выигрышную сделку.</p>
+                            `
+                        }
+                    ]
+                }
+            ]
+        };
+
+
+        // --- COMPONENTS ---
+
+        const LanguageToggle = ({ currentLang, setLang }) => (
+            <div className="flex items-center gap-2 text-sm font-bold bg-quant-border/30 rounded-full px-1 py-1 border border-quant-border/50">
+                <button 
+                    onClick={() => setLang('en')}
+                    className={`px-3 py-1 rounded-full transition-colors ${currentLang === 'en' ? 'bg-quant-dark text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                >
+                    EN
+                </button>
+                <button 
+                    onClick={() => setLang('ru')}
+                    className={`px-3 py-1 rounded-full transition-colors ${currentLang === 'ru' ? 'bg-quant-dark text-white' : 'text-gray-500 hover:text-gray-300'}`}
+                >
+                    RU
+                </button>
+            </div>
+        );
+
+        const PitchSection = ({ lang }) => {
+            const [activePitch, setActivePitch] = useState('intermediate');
+            const contentRef = useRef(null);
+            
+            const t = TRANSLATIONS[lang].pitchSection;
+            const currentData = PITCHES[lang][activePitch];
+
+            // Re-render MathJax when the pitch changes
+            useEffect(() => {
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise([contentRef.current]).catch((err) => console.log('MathJax error: ', err));
+                }
+            }, [activePitch, lang]);
+
+            return (
+                <section id="pitch-deck" className="py-24 px-6 max-w-4xl mx-auto">
+                    <div className="flex flex-col items-center mb-12">
+                        <h2 className="text-3xl font-bold mb-8 text-center">{t.title}</h2>
+                        
+                        {/* The PM Flex: The Dynamic Depth Toggle */}
+                        <div className="bg-quant-dark border border-quant-border rounded-full p-1 inline-flex w-full sm:w-auto relative">
+                            {Object.values(PITCHES[lang]).map((pitch) => (
+                                <button
+                                    key={pitch.id}
+                                    onClick={() => setActivePitch(pitch.id)}
+                                    className={`flex-1 sm:flex-none px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 relative z-10
+                                        ${activePitch === pitch.id ? 'text-black' : 'text-gray-400 hover:text-white'}`}
+                                >
+                                    {pitch.label}
+                                </button>
+                            ))}
+                            {/* Sliding Background Highlight */}
+                            <div 
+                                className="absolute top-1 bottom-1 bg-quant-green rounded-full transition-all duration-300 z-0"
+                                style={{
+                                    width: 'calc(33.333% - 4px)',
+                                    left: activePitch === 'easy' ? '4px' : activePitch === 'intermediate' ? 'calc(33.333% + 2px)' : 'calc(66.666%)'
+                                }}
+                            ></div>
+                        </div>
+                    </div>
+
+                    <div className="bg-quant-dark border border-quant-border rounded-xl p-8 md:p-12 shadow-2xl relative overflow-hidden">
+                         {/* Subtle background glow */}
+                        <div className="absolute -top-24 -right-24 w-48 h-48 bg-quant-green/10 blur-3xl rounded-full pointer-events-none"></div>
+                        
+                        <div className="mb-8 border-b border-quant-border pb-6">
+                            <div className="text-xs font-mono text-quant-blue mb-2 uppercase tracking-wider">{t.targetLabel} {currentData.target}</div>
+                            <h3 className="text-2xl md:text-3xl font-bold text-white">{currentData.title}</h3>
+                        </div>
+
+                        <div 
+                            ref={contentRef}
+                            className="markdown-content text-lg" 
+                            dangerouslySetInnerHTML={{ __html: currentData.content }} 
+                        />
+                    </div>
+                </section>
+            );
+        };
+
+        const KnowledgeBase = ({ onBack, lang }) => {
+            const kbRef = useRef(null);
+            const t = TRANSLATIONS[lang].kbSection;
+
+             useEffect(() => {
+                window.scrollTo(0, 0);
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    window.MathJax.typesetPromise([kbRef.current]).catch((err) => console.log('MathJax error: ', err));
+                }
+            }, [lang]);
+
+            return (
+                <div className="min-h-screen pt-32 pb-20 px-6 max-w-7xl mx-auto animate-fade-in" ref={kbRef}>
+                    <button 
+                        onClick={onBack}
+                        className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-12 font-mono text-sm"
+                    >
+                        <Icon name="ArrowLeft" className="w-4 h-4" />
+                        {t.backBtn}
+                    </button>
+
+                    <div className="mb-16 border-b border-quant-border pb-10">
+                        <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 flex items-center gap-4">
+                            <Icon name="BookOpen" className="w-10 h-10 text-quant-blue" />
+                            {t.title}
+                        </h1>
+                        <p className="text-xl text-gray-400">{t.subtitle}</p>
+                    </div>
+
+                    <div className="space-y-24">
+                        {KB_CATEGORIES[lang].map((category, catIdx) => (
+                            <div key={catIdx}>
+                                <h2 className="text-2xl font-bold text-purple-400 border-b border-dashed border-gray-800 pb-3 mb-8 tracking-wide">
+                                    {category.title}
+                                </h2>
+                                
+                                <div className="space-y-12">
+                                    {category.entries.map((entry, idx) => (
+                                        <div key={idx} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                            
+                                            {/* Technical Column */}
+                                            <div className="lg:col-span-2 bg-quant-dark p-8 rounded-xl border border-quant-border shadow-2xl">
+                                                <span className="inline-block bg-gray-800 text-gray-400 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+                                                    {entry.tag}
+                                                </span>
+                                                <h3 className="text-2xl font-bold text-quant-blue mb-6">{entry.term}</h3>
+                                                <div 
+                                                    className="text-gray-300 leading-relaxed markdown-content" 
+                                                    dangerouslySetInnerHTML={{__html: entry.academic}} 
+                                                />
+                                            </div>
+                                            
+                                            {/* Plain English Column */}
+                                            <div className="lg:col-span-1 bg-black/60 p-8 rounded-xl border border-green-900/30 shadow-2xl flex flex-col justify-center">
+                                                <h4 className="text-sm font-bold text-quant-green uppercase tracking-wider mb-4 flex items-center gap-2 border-b border-gray-800 pb-2">
+                                                    <Icon name="Zap" className="w-4 h-4" />
+                                                    {t.plainEnglishTitle}
+                                                </h4>
+                                                <div 
+                                                    className="text-gray-300 leading-relaxed italic text-sm md:text-base space-y-4" 
+                                                    dangerouslySetInnerHTML={{__html: entry.plain}} 
+                                                />
+                                            </div>
+
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+
+        // --- MAIN APP (ROUTER) ---
+        const App = () => {
+            const [scrolled, setScrolled] = useState(false);
+            const [currentView, setCurrentView] = useState('home'); // 'home' or 'kb'
+            const [lang, setLang] = useState('en'); // 'en' or 'ru'
+
+            useEffect(() => {
+                const handleScroll = () => setScrolled(window.scrollY > 50);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+            
+            const t = TRANSLATIONS[lang];
+
+            if (currentView === 'kb') {
+                return (
+                    <div className="min-h-screen">
+                         <nav className="fixed w-full z-50 bg-quant-black/90 backdrop-blur-md border-b border-quant-border py-4 transition-all duration-300">
+                            <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+                                <div className="text-xl font-bold tracking-tighter flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setCurrentView('home')}>
+                                    <Icon name="Cpu" className="w-6 h-6 text-quant-green" />
+                                    <span>{t.nav.title}<span className="text-gray-500">{t.nav.subtitle}</span></span>
+                                </div>
+                                <LanguageToggle currentLang={lang} setLang={setLang} />
+                            </div>
+                        </nav>
+                        <KnowledgeBase onBack={() => setCurrentView('home')} lang={lang} />
+                    </div>
+                )
+            }
+
+            return (
+                <div className="min-h-screen">
+                    {/* Navigation */}
+                    <nav className={`fixed w-full z-50 transition-all duration-300 ${scrolled ? 'bg-quant-black/90 backdrop-blur-md border-b border-quant-border py-4' : 'bg-transparent py-6'}`}>
+                        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+                            <div className="text-xl font-bold tracking-tighter flex items-center gap-2">
+                                <Icon name="Cpu" className="w-6 h-6 text-quant-green" />
+                                <span>{t.nav.title}<span className="text-gray-500">{t.nav.subtitle}</span></span>
+                            </div>
+                            <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
+                                <a href="#architecture" className="hover:text-white transition-colors">{t.nav.architecture}</a>
+                                <a href="#pitch-deck" className="hover:text-white transition-colors">{t.nav.pitch}</a>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <LanguageToggle currentLang={lang} setLang={setLang} />
+                                <button 
+                                    onClick={() => setCurrentView('kb')}
+                                    className="px-5 py-2 text-sm font-bold bg-white text-black hover:bg-gray-200 transition-colors rounded-full flex items-center gap-2 md:hidden"
+                                >
+                                    <Icon name="BookOpen" className="w-4 h-4" />
+                                    KB
+                                </button>
+                                <button 
+                                    onClick={() => setCurrentView('kb')}
+                                    className="hidden md:flex px-5 py-2 text-sm font-bold bg-white text-black hover:bg-gray-200 transition-colors rounded-full items-center gap-2"
+                                >
+                                    <Icon name="BookOpen" className="w-4 h-4" />
+                                    {t.nav.kb}
+                                </button>
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* Hero Section */}
+                    <section className="pt-40 pb-20 px-6 max-w-7xl mx-auto flex flex-col items-center text-center">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-quant-border/50 border border-gray-700 text-xs font-mono text-gray-400 mb-8">
+                            <span className="w-2 h-2 rounded-full bg-quant-green animate-pulse"></span>
+                            {t.hero.badge}
+                        </div>
+                        <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 max-w-4xl glow-text">
+                            {t.hero.title1} <br/>
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-quant-green to-quant-blue">{t.hero.title2}</span>
+                        </h1>
+                        <p className="text-xl text-gray-400 max-w-2xl mb-10">
+                            {t.hero.description}
+                        </p>
+                        <div className="flex gap-4">
+                            <button className="px-8 py-3 bg-quant-green text-black font-bold rounded hover:bg-green-400 transition-colors" onClick={() => document.getElementById('architecture').scrollIntoView({ behavior: 'smooth' })}>
+                                {t.hero.btnArch}
+                            </button>
+                            <button onClick={() => setCurrentView('kb')} className="px-8 py-3 border border-quant-border text-white font-bold rounded hover:bg-gray-900 transition-colors">
+                                {t.hero.btnKb}
+                            </button>
+                        </div>
+                    </section>
+
+                    {/* Core Systems Grid */}
+                    <section id="architecture" className="py-20 px-6 max-w-7xl mx-auto border-t border-quant-border">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            
+                            <div className="p-8 border border-quant-border bg-quant-dark rounded-xl hover:border-gray-600 transition-colors group relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <Icon name="Zap" className="w-24 h-24" />
+                                </div>
+                                <Icon name="Zap" className="w-10 h-10 text-quant-green mb-6 group-hover:scale-110 transition-transform relative z-10" />
+                                <h3 className="text-xl font-bold mb-3 relative z-10">{t.architecture.jit.title}</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed relative z-10">
+                                    {t.architecture.jit.desc}
+                                </p>
+                            </div>
+
+                            <div className="p-8 border border-quant-border bg-quant-dark rounded-xl hover:border-gray-600 transition-colors group relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <Icon name="BrainCircuit" className="w-24 h-24" />
+                                </div>
+                                <Icon name="BrainCircuit" className="w-10 h-10 text-quant-blue mb-6 group-hover:scale-110 transition-transform relative z-10" />
+                                <h3 className="text-xl font-bold mb-3 relative z-10">{t.architecture.ai.title}</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed relative z-10">
+                                    {t.architecture.ai.desc}
+                                </p>
+                            </div>
+
+                            <div className="p-8 border border-quant-border bg-quant-dark rounded-xl hover:border-gray-600 transition-colors group relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                    <Icon name="ShieldCheck" className="w-24 h-24" />
+                                </div>
+                                <Icon name="ShieldCheck" className="w-10 h-10 text-purple-400 mb-6 group-hover:scale-110 transition-transform relative z-10" />
+                                <h3 className="text-xl font-bold mb-3 relative z-10">{t.architecture.mev.title}</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed relative z-10">
+                                    {t.architecture.mev.desc}
+                                </p>
+                            </div>
+
+                        </div>
+                    </section>
+
+                    {/* The Dynamic Pitch Section */}
+                    <PitchSection lang={lang} />
+
+                    {/* Footer */}
+                    <footer className="py-12 border-t border-quant-border text-center text-sm text-gray-500 font-mono">
+                        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div>{t.footer.copyright}</div>
+                            <div className="flex gap-6">
+                                <a href="https://www.github.com/nicksaperov" target="_blank" rel="noopener noreferrer" className="hover:text-white">GITHUB</a>
+                                <a href="https://www.linkedin.com/in/nicksaperov" target="_blank" rel="noopener noreferrer" className="hover:text-white">LINKEDIN</a>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+    </style>
+</body>
+</html>

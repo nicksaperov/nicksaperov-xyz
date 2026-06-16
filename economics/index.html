@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Николай Саперов | Олимпиадная Экономика</title>
+    
+    <!-- Zero-Build Mandate: React & ReactDOM via CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel for in-browser JSX compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration for Academic Aesthetic -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        academic: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            800: '#1e293b', // Deep Slate
+                            900: '#0f172a', // Navy/Slate Base
+                            accent: '#2563eb' // Crisp Blue Accent
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['Merriweather', 'Georgia', 'serif'], // Authoritative
+                        sans: ['Inter', 'system-ui', 'sans-serif'], // Modern Data
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Merriweather', serif; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+    </style>
+</head>
+<body class="text-academic-800 antialiased">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- COMPONENTS ---
+
+        // 1. Navigation
+        const NavBar = ({ currentView, setCurrentView }) => (
+            <nav className="fixed w-full z-50 glass-panel border-b border-slate-200">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between h-20 items-center">
+                        <div className="flex-shrink-0 flex items-center cursor-pointer" onClick={() => setCurrentView('home')}>
+                            <span className="font-serif font-bold text-2xl text-academic-900 tracking-tight">nicksaperov<span className="text-academic-accent">.xyz</span></span>
+                        </div>
+                        <div className="hidden md:flex space-x-8">
+                            <button onClick={() => setCurrentView('home')} className={`font-medium transition-colors ${currentView === 'home' ? 'text-academic-900' : 'text-slate-600 hover:text-academic-900'}`}>Главная</button>
+                            <button onClick={() => setCurrentView('vault')} className={`font-medium transition-colors ${currentView === 'vault' ? 'text-academic-900' : 'text-slate-600 hover:text-academic-900'}`}>Портал (n2tutor)</button>
+                        </div>
+                        <div className="hidden md:flex gap-4">
+                            {currentView === 'home' && (
+                                <button onClick={() => setCurrentView('vault')} className="text-academic-900 font-medium hover:text-academic-accent transition-colors">
+                                    Войти
+                                </button>
+                            )}
+                            <button onClick={() => { setCurrentView('home'); setTimeout(() => window.location.hash = '#contact', 100); }} className="bg-academic-900 text-white px-6 py-2.5 rounded-sm font-medium hover:bg-slate-800 transition-all shadow-md">
+                                Начать подготовку
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        );
+
+        // 2. Hero Section (Dual Audience Targeting: Students & Parents)
+        const Hero = () => (
+            <section className="pt-32 pb-20 md:pt-48 md:pb-32 bg-academic-50 relative overflow-hidden">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div className="text-center max-w-4xl mx-auto">
+                        <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-50 text-academic-accent font-semibold text-sm mb-6 border border-blue-100">
+                            <i data-lucide="award" className="w-4 h-4 mr-2"></i>
+                            Элитная подготовка к ВсОШ по Экономике
+                        </div>
+                        <h1 className="text-4xl md:text-6xl font-bold text-academic-900 leading-tight mb-6">
+                            Фундаментальные знания для <span className="text-transparent bg-clip-text bg-gradient-to-r from-academic-accent to-blue-800">победы на Олимпиадах</span>
+                        </h1>
+                        <p className="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+                            Строгий академический подход. Авторские алгоритмы решения задач и продвинутая теория для учеников 9-11 классов, нацеленных на бюджет в НИУ ВШЭ, МГУ и РЭШ.
+                        </p>
+                        <div className="flex flex-col sm:flex-row justify-center gap-4">
+                            <a href="#contact" className="bg-academic-accent text-white px-8 py-4 rounded-sm font-medium hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center">
+                                Оставить заявку на менторство
+                                <i data-lucide="arrow-right" className="w-5 h-5 ml-2"></i>
+                            </a>
+                            <a href="#archive" className="bg-white text-academic-900 border border-slate-300 px-8 py-4 rounded-sm font-medium hover:bg-slate-50 transition-all shadow-sm flex items-center justify-center">
+                                Скачать материалы интенсива
+                                <i data-lucide="download" className="w-5 h-5 ml-2"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                {/* Abstract Geometric Background Elements for Academic Tech Vibe */}
+                <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-blue-100 opacity-50 blur-3xl z-0 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-slate-200 opacity-50 blur-3xl z-0 pointer-events-none"></div>
+            </section>
+        );
+
+        // 3. Syllabus & Methodology (Structured Academic Competence)
+        const Methodology = () => {
+            const modules = [
+                {
+                    title: "Микроэкономика",
+                    icon: "bar-chart-2",
+                    desc: "От теории потребительского выбора до сложных рыночных структур и провалов рынка. Учимся мыслить графиками и производными."
+                },
+                {
+                    title: "Теория Игр",
+                    icon: "git-branch",
+                    desc: "Равновесие Нэша, динамические игры, совершенное в подыграх равновесие. Стратегическое мышление для решения нестандартных качественных задач."
+                },
+                {
+                    title: "Математический Аппарат",
+                    icon: "function-square",
+                    desc: "Оптимизация функций нескольких переменных, метод Лагранжа, элементы линейной алгебры. Математика как язык экономики, а не просто формулы."
+                }
+            ];
+
+            return (
+                <section id="methodology" className="py-24 bg-white border-t border-slate-100">
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center mb-16">
+                            <h2 className="text-3xl md:text-4xl font-bold text-academic-900 mb-4">Архитектура Знаний</h2>
+                            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+                                Никакой зубрежки. Мы выстраиваем системное понимание предмета, которое позволяет решать задачи любого уровня сложности.
+                            </p>
+                        </div>
+                        <div className="grid md:grid-cols-3 gap-10">
+                            {modules.map((mod, idx) => (
+                                <div key={idx} className="bg-academic-50 p-8 rounded-sm border border-slate-100 hover:shadow-lg transition-shadow">
+                                    <div className="w-14 h-14 bg-white rounded-sm shadow-sm flex items-center justify-center mb-6 text-academic-accent border border-slate-200">
+                                        <i data-lucide={mod.icon} className="w-7 h-7"></i>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-academic-900 mb-3">{mod.title}</h3>
+                                    <p className="text-slate-600 leading-relaxed">{mod.desc}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // 4. Lead Magnet / Knowledge Base (The n2tutor Legacy)
+        const Archive = () => {
+            const [email, setEmail] = useState('');
+            const [submitted, setSubmitted] = useState(false);
+
+            const handleDownload = (e) => {
+                e.preventDefault();
+                if(email) {
+                    setSubmitted(true);
+                    // In production: Sync with Mailchimp/Firebase
+                }
+            };
+
+            return (
+                <section id="archive" className="py-24 bg-academic-900 text-white relative overflow-hidden">
+                    <div className="absolute inset-0 opacity-10" style={{backgroundImage: "url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"1\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"}}></div>
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                        <div className="flex flex-col lg:flex-row items-center gap-16">
+                            <div className="flex-1">
+                                <div className="inline-block px-3 py-1 bg-slate-800 text-slate-300 rounded text-sm font-medium mb-4 uppercase tracking-wider">
+                                    Наследие n2tutor
+                                </div>
+                                <h2 className="text-3xl md:text-4xl font-bold mb-6">База Знаний & Материалы Интенсивов</h2>
+                                <p className="text-slate-300 text-lg mb-8 leading-relaxed">
+                                    Получите доступ к архиву авторских задач, разборам регионального и заключительного этапов ВсОШ. Идеально для самостоятельного "брейншторма" и отработки слабых мест.
+                                </p>
+                                <ul className="space-y-4 mb-8">
+                                    {['Подборка задач по Макроэкономике (Уровень: Закл)', 'Сборник ловушек в качественных задачах', 'Чек-лист математического аппарата'].map((item, i) => (
+                                        <li key={i} className="flex items-center text-slate-200">
+                                            <i data-lucide="check-circle" className="w-5 h-5 text-academic-accent mr-3"></i>
+                                            {item}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <div className="w-full lg:w-1/3 bg-white p-8 rounded-sm shadow-2xl text-academic-900">
+                                <h3 className="text-2xl font-bold mb-2">Бесплатный Доступ</h3>
+                                <p className="text-slate-500 mb-6 text-sm">Получите первую часть архива на почту прямо сейчас.</p>
+                                
+                                {submitted ? (
+                                    <div className="bg-green-50 text-green-800 p-4 rounded-sm border border-green-200 text-center">
+                                        <i data-lucide="mail-check" className="w-8 h-8 mx-auto mb-2 text-green-600"></i>
+                                        <p className="font-medium">Материалы отправлены!</p>
+                                        <p className="text-sm mt-1">Проверьте вашу почту ({email})</p>
+                                    </div>
+                                ) : (
+                                    <form onSubmit={handleDownload} className="space-y-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Email для материалов</label>
+                                            <input 
+                                                type="email" 
+                                                required
+                                                className="w-full px-4 py-3 border border-slate-300 rounded-sm focus:ring-2 focus:ring-academic-accent focus:border-academic-accent outline-none transition-all"
+                                                placeholder="student@example.com"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                            />
+                                        </div>
+                                        <button type="submit" className="w-full bg-academic-accent text-white py-3 rounded-sm font-medium hover:bg-blue-700 transition-colors flex justify-center items-center">
+                                            Получить PDF
+                                            <i data-lucide="file-text" className="w-4 h-4 ml-2"></i>
+                                        </button>
+                                    </form>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // 5. Contact Form (Lead Capture for Elite Cohort)
+        const Contact = () => {
+            const [status, setStatus] = useState('idle'); // idle, loading, success
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                setStatus('loading');
+                // Simulate API Call - Defensive Programming Principle applied
+                setTimeout(() => {
+                    try {
+                        // In production: Submit to Firebase / CRM
+                        setStatus('success');
+                    } catch (error) {
+                        alert("Произошла ошибка. Пожалуйста, свяжитесь со мной через Telegram.");
+                        setStatus('idle');
+                    }
+                }, 1000);
+            };
+
+            return (
+                <section id="contact" className="py-24 bg-academic-50">
+                    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center mb-12">
+                            <h2 className="text-3xl md:text-4xl font-bold text-academic-900 mb-4">Подача заявки на менторство</h2>
+                            <p className="text-lg text-slate-600">
+                                Набор ограничен. Оставьте контакты, и мы свяжемся с вами для проведения вводного диагностического интервью.
+                            </p>
+                        </div>
+
+                        {status === 'success' ? (
+                            <div className="bg-white p-10 rounded-sm shadow-md text-center border-t-4 border-academic-accent">
+                                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i data-lucide="check" className="w-8 h-8 text-academic-accent"></i>
+                                </div>
+                                <h3 className="text-2xl font-bold text-academic-900 mb-2">Заявка принята</h3>
+                                <p className="text-slate-600">Мы свяжемся с вами в течение 24 часов в Telegram для назначения времени интервью.</p>
+                            </div>
+                        ) : (
+                            <div className="bg-white p-8 md:p-10 rounded-sm shadow-md border border-slate-100">
+                                <form onSubmit={handleSubmit} className="space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Имя ученика</label>
+                                            <input required type="text" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-sm focus:bg-white focus:ring-2 focus:ring-academic-accent focus:border-academic-accent outline-none transition-all" placeholder="Иван Иванов" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Класс обучения</label>
+                                            <select required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-sm focus:bg-white focus:ring-2 focus:ring-academic-accent focus:border-academic-accent outline-none transition-all">
+                                                <option value="">Выберите класс</option>
+                                                <option value="9">9 класс</option>
+                                                <option value="10">10 класс</option>
+                                                <option value="11">11 класс</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Telegram (Никнейм или Номер)</label>
+                                        <input required type="text" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-sm focus:bg-white focus:ring-2 focus:ring-academic-accent focus:border-academic-accent outline-none transition-all" placeholder="@username" />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Текущий уровень и цели</label>
+                                        <textarea rows="4" className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-sm focus:bg-white focus:ring-2 focus:ring-academic-accent focus:border-academic-accent outline-none transition-all" placeholder="Например: Писал региональный этап, хочу пройти на закл. Проседает математика..."></textarea>
+                                    </div>
+
+                                    <button 
+                                        type="submit" 
+                                        disabled={status === 'loading'}
+                                        className={`w-full py-4 rounded-sm font-bold text-white transition-all flex justify-center items-center shadow-md ${status === 'loading' ? 'bg-slate-400 cursor-not-allowed' : 'bg-academic-900 hover:bg-slate-800'}`}
+                                    >
+                                        {status === 'loading' ? 'Отправка...' : 'Отправить заявку'}
+                                        {status !== 'loading' && <i data-lucide="send" className="w-5 h-5 ml-2"></i>}
+                                    </button>
+                                </form>
+                            </div>
+                        )}
+                    </div>
+                </section>
+            );
+        };
+
+        // 6. Knowledge Vault (Protected Portal)
+        const KnowledgeVault = () => {
+            const [accessKey, setAccessKey] = useState('');
+            const [isUnlocked, setIsUnlocked] = useState(false);
+            const [error, setError] = useState('');
+
+            const handleUnlock = (e) => {
+                e.preventDefault();
+                // Phase 1 MVP: Static password gating. 
+                // Business Logic: Low friction, zero DB cost. Upgrades to Firebase later if needed.
+                if (accessKey.toUpperCase() === 'OLYMPIAD2026' || accessKey.toUpperCase() === 'N2TUTOR') {
+                    setIsUnlocked(true);
+                    setError('');
+                } else {
+                    setError('Неверный ключ доступа. Проверьте письмо с рассылкой.');
+                }
+            };
+
+            // This data object bridges the gap to your Google Drive materials
+            const vaultData = [
+                {
+                    module: "Микроэкономика: Интенсив",
+                    lessons: [
+                        { title: "День 1. Альтернативные издержки и КПВ", type: "pdf", link: "#" },
+                        { title: "День 2. Оптимизация поведения потребителя", type: "pdf", link: "#" },
+                        { title: "День 3. Провалы рынка и экстерналии", type: "video", link: "#" }
+                    ]
+                },
+                {
+                    module: "Макроэкономика & Теория Игр",
+                    lessons: [
+                        { title: "Модель IS-LM: Продвинутый уровень", type: "pdf", link: "#" },
+                        { title: "Динамические игры: Равновесие, совершенное в подыграх", type: "pdf", link: "#" }
+                    ]
+                }
+            ];
+
+            if (!isUnlocked) {
+                return (
+                    <section className="pt-32 pb-24 min-h-screen bg-slate-50 flex items-center justify-center">
+                        <div className="bg-white p-10 rounded-sm shadow-xl max-w-md w-full border border-slate-100 mx-4">
+                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <i data-lucide="lock" className="w-8 h-8 text-academic-900"></i>
+                            </div>
+                            <h2 className="text-2xl font-bold text-center text-academic-900 mb-2">Закрытый Портал</h2>
+                            <p className="text-slate-500 text-center mb-8">Введите ключ доступа, полученный на email, для просмотра материалов n2tutor.</p>
+                            
+                            <form onSubmit={handleUnlock} className="space-y-4">
+                                <div>
+                                    <input 
+                                        type="password" 
+                                        value={accessKey}
+                                        onChange={(e) => setAccessKey(e.target.value)}
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-sm focus:bg-white focus:ring-2 focus:ring-academic-accent outline-none text-center tracking-widest font-mono uppercase"
+                                        placeholder="ВВЕДИТЕ КЛЮЧ"
+                                    />
+                                    {error && <p className="text-red-500 text-sm mt-2 text-center">{error}</p>}
+                                </div>
+                                <button type="submit" className="w-full bg-academic-900 text-white py-3 rounded-sm font-medium hover:bg-slate-800 transition-colors">
+                                    Получить доступ
+                                </button>
+                            </form>
+                            <p className="text-xs text-center text-slate-400 mt-6">
+                                Нет ключа? Оставьте заявку на скачивание архива на главной странице.
+                            </p>
+                        </div>
+                    </section>
+                );
+            }
+
+            return (
+                <section className="pt-32 pb-24 min-h-screen bg-slate-50">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="mb-10 flex flex-col sm:flex-row sm:justify-between sm:items-end border-b border-slate-200 pb-6 gap-4">
+                            <div>
+                                <h1 className="text-3xl font-bold text-academic-900 mb-2">Материалы n2tutor</h1>
+                                <p className="text-slate-600">Архив задач, решений и интенсивов для самостоятельной подготовки.</p>
+                            </div>
+                            <div className="inline-flex items-center text-green-700 text-sm font-medium px-3 py-1.5 bg-green-50 rounded border border-green-200 w-max">
+                                <i data-lucide="shield-check" className="w-4 h-4 mr-2"></i>
+                                Доступ открыт
+                            </div>
+                        </div>
+
+                        <div className="space-y-8">
+                            {vaultData.map((section, idx) => (
+                                <div key={idx} className="bg-white rounded-sm shadow-sm border border-slate-200 overflow-hidden">
+                                    <div className="bg-academic-900 px-6 py-4">
+                                        <h3 className="text-lg font-bold text-white">{section.module}</h3>
+                                    </div>
+                                    <div className="divide-y divide-slate-100">
+                                        {section.lessons.map((lesson, lIdx) => (
+                                            <div key={lIdx} className="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition-colors group">
+                                                <div className="flex items-center">
+                                                    <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-academic-accent mr-4 flex-shrink-0">
+                                                        <i data-lucide={lesson.type === 'pdf' ? 'file-text' : 'play'} className="w-5 h-5"></i>
+                                                    </div>
+                                                    <span className="font-medium text-slate-800 group-hover:text-academic-accent transition-colors">{lesson.title}</span>
+                                                </div>
+                                                <a href={lesson.link} target="_blank" className="px-4 py-2 text-sm font-medium text-academic-accent bg-blue-50 hover:bg-blue-100 rounded transition-colors flex items-center flex-shrink-0 ml-4">
+                                                    <span className="hidden sm:inline">Открыть</span>
+                                                    <i data-lucide="external-link" className="w-4 h-4 sm:ml-2"></i>
+                                                </a>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            );
+        };
+
+        // Footer
+        const Footer = () => (
+            <footer className="bg-slate-950 py-12 text-center text-slate-400 border-t border-slate-800">
+                <div className="max-w-6xl mx-auto px-4">
+                    <p className="font-serif text-xl text-white mb-4">nicksaperov<span className="text-academic-accent">.xyz</span></p>
+                    <p className="text-sm">© {new Date().getFullYear()} Николай Саперов. Все права защищены.</p>
+                    <p className="text-sm mt-2">Элитная подготовка к Олимпиадам по Экономике.</p>
+                </div>
+            </footer>
+        );
+
+        // Main App Layout
+        const App = () => {
+            const [currentView, setCurrentView] = useState('home');
+
+            // Initialize Lucide icons after render and whenever the view changes
+            useEffect(() => {
+                lucide.createIcons();
+            }, [currentView]);
+
+            return (
+                <div className="min-h-screen flex flex-col font-sans">
+                    <NavBar currentView={currentView} setCurrentView={setCurrentView} />
+                    <main className="flex-grow">
+                        {currentView === 'home' ? (
+                            <>
+                                <Hero />
+                                <Methodology />
+                                <Archive />
+                                <Contact />
+                            </>
+                        ) : (
+                            <KnowledgeVault />
+                        )}
+                    </main>
+                    <Footer />
+                </div>
+            );
+        };
+
+        // Standard React 18 render initialization
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "projects": {},
+  "targets": {
+    "nicksaperov-portfolio-2026": {
+      "hosting": {
+        "sundragontree": [
+          "sundragontree-art-app"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

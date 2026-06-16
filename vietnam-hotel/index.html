@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Digital Solutions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 antialiased flex flex-col min-h-screen">
+
+    <!-- Sticky Navbar -->
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="font-black text-xl tracking-tighter">
+                HOTEL<span class="text-blue-600">.DIGITAL</span>
+            </div>
+            <button onclick="toggleLang()" class="bg-gray-100 hover:bg-gray-200 text-sm font-bold px-4 py-2 rounded-full transition-colors flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                <span id="langLabel">EN</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <main class="flex-1 max-w-7xl mx-auto px-6 py-20 w-full">
+        <div class="text-center max-w-3xl mx-auto mb-20">
+            <h1 class="text-4xl md:text-6xl font-black mb-6 tracking-tight leading-tight" data-i18n="hero-title">
+                Tối Ưu Hóa Doanh Thu Khách Sạn Của Bạn
+            </h1>
+            <p class="text-lg md:text-xl text-gray-500 font-medium mb-10" data-i18n="hero-sub">
+                Tăng cường đặt phòng trực tiếp. Giảm thiểu hoa hồng OTA. Tự động hóa quản lý từ A-Z.
+            </p>
+        </div>
+
+        <!-- Pricing Tiers -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            <!-- Tier 1 -->
+            <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-xl transition-shadow flex flex-col">
+                <h3 class="text-xl font-black text-gray-900 mb-2 uppercase tracking-widest" data-i18n="t1-title">Web Một Trang</h3>
+                <div class="text-3xl font-black text-blue-600 mb-4">1,500,000 VND</div>
+                <p class="text-gray-500 mb-8 font-medium text-sm leading-relaxed" data-i18n="t1-desc">
+                    Lựa chọn hoàn hảo cho homestay nhỏ. Tốc độ tải trang nhanh, tương thích di động, hiển thị đầy đủ thông tin cơ bản.
+                </p>
+                <a href="https://nhanquyen2.netlify.app/" target="_blank" class="mt-auto block text-center bg-gray-50 text-gray-900 font-black text-xs uppercase tracking-widest py-4 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200" data-i18n="btn-demo">
+                    Xem Mẫu
+                </a>
+            </div>
+
+            <!-- Tier 2 -->
+            <div class="bg-white rounded-3xl p-8 border border-blue-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:shadow-xl transition-shadow flex flex-col relative scale-105 z-10">
+                <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest py-1.5 px-4 rounded-full" data-i18n="badge-popular">Phổ Biến Nhất</div>
+                <h3 class="text-xl font-black text-gray-900 mb-2 uppercase tracking-widest" data-i18n="t2-title">Web Đa Trang</h3>
+                <div class="text-3xl font-black text-blue-600 mb-4">3,500,000 VND</div>
+                <p class="text-gray-500 mb-8 font-medium text-sm leading-relaxed" data-i18n="t2-desc">
+                    Website hoàn chỉnh chuyên nghiệp. Hiển thị chi tiết thư viện ảnh từng hạng phòng, tiện ích và form liên hệ đặt phòng trực tiếp.
+                </p>
+                <a href="https://motel-dashboard.web.app/" target="_blank" class="mt-auto block text-center bg-blue-600 text-white font-black text-xs uppercase tracking-widest py-4 rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20" data-i18n="btn-demo">
+                    Xem Mẫu
+                </a>
+            </div>
+
+            <!-- Tier 3 -->
+            <div class="bg-gray-900 rounded-3xl p-8 border border-gray-800 shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-xl transition-shadow flex flex-col text-white">
+                <h3 class="text-xl font-black text-white mb-2 uppercase tracking-widest" data-i18n="t3-title">Web + HMS</h3>
+                <div class="text-3xl font-black text-blue-400 mb-4">6,500,000 VND</div>
+                <p class="text-gray-400 mb-8 font-medium text-sm leading-relaxed" data-i18n="t3-desc">
+                    Gói vận hành toàn diện. Bao gồm Website Đa Trang + Hệ thống Admin Panel quản lý sơ đồ phòng, check-in, và lưu trữ dữ liệu khách hàng.
+                </p>
+                <!-- Updated with Public Firebase Hosting URL -->
+                <a href="https://motel-dashboard.web.app/admin" target="_blank" class="mt-auto block text-center bg-white text-black font-black text-xs uppercase tracking-widest py-4 rounded-xl hover:bg-gray-200 transition-colors" data-i18n="btn-demo-hms">
+                    Xem Demo Quản Lý
+                </a>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-200 bg-white py-10 mt-auto">
+        <div class="max-w-7xl mx-auto px-6 text-center text-gray-400 text-sm font-medium" data-i18n="footer-text">
+            Được phát triển tại Đà Lạt & Đà Nẵng, Việt Nam. Giải pháp tăng trưởng cho doanh nghiệp lưu trú.
+        </div>
+    </footer>
+
+    <!-- Translation Logic -->
+    <script>
+        const i18n = {
+            'hero-title': {
+                vi: 'Tối Ưu Hóa Doanh Thu Khách Sạn Của Bạn',
+                en: 'Optimize Your Hotel Revenue'
+            },
+            'hero-sub': {
+                vi: 'Tăng cường đặt phòng trực tiếp. Giảm thiểu hoa hồng OTA. Tự động hóa quản lý từ A-Z.',
+                en: 'Increase direct bookings. Eliminate OTA commissions. Automate management from A to Z.'
+            },
+            't1-title': { vi: 'Web Một Trang', en: 'One-Page Website' },
+            't1-desc': { 
+                vi: 'Lựa chọn hoàn hảo cho homestay nhỏ. Tốc độ tải trang nhanh, tương thích di động, hiển thị đầy đủ thông tin cơ bản.', 
+                en: 'Perfect for small homestays. Fast loading, mobile-responsive, displays all essential information.' 
+            },
+            't2-title': { vi: 'Web Đa Trang', en: 'Multi-Page Website' },
+            't2-desc': { 
+                vi: 'Website hoàn chỉnh chuyên nghiệp. Hiển thị chi tiết thư viện ảnh từng hạng phòng, tiện ích và form liên hệ đặt phòng trực tiếp.', 
+                en: 'Comprehensive professional site. Detailed room galleries, amenities, and direct booking contact forms.' 
+            },
+            't3-title': { vi: 'Web + Hệ Thống HMS', en: 'Web + Admin Panel (HMS)' },
+            't3-desc': { 
+                vi: 'Gói vận hành toàn diện. Bao gồm Website Đa Trang + Hệ thống Admin Panel quản lý sơ đồ phòng, check-in, và lưu trữ dữ liệu khách hàng.', 
+                en: 'Complete operational package. Includes Multi-Page Website + Admin Panel for room layouts, check-ins, and guest data storage.' 
+            },
+            'badge-popular': { vi: 'Phổ Biến Nhất', en: 'Most Popular' },
+            'btn-demo': { vi: 'Xem Mẫu', en: 'View Demo' },
+            'btn-demo-hms': { vi: 'Xem Demo Quản Lý', en: 'View Admin Demo' },
+            'footer-text': { 
+                vi: 'Được phát triển tại Đà Lạt & Đà Nẵng, Việt Nam. Giải pháp tăng trưởng cho doanh nghiệp lưu trú.', 
+                en: 'Developed in Da Lat & Da Nang, Vietnam. Growth solutions for hospitality businesses.' 
+            }
+        };
+
+        let currentLang = 'vi';
+
+        function toggleLang() {
+            currentLang = currentLang === 'vi' ? 'en' : 'vi';
+            document.getElementById('langLabel').innerText = currentLang === 'vi' ? 'EN' : 'VN';
+            
+            const elements = document.querySelectorAll('[data-i18n]');
+            elements.forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (i18n[key]) el.innerText = i18n[key][currentLang];
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ШТУРМ | 7 дней без права на ошибку</title>
+    
+    <!-- Tailwind CSS (Zero-Build CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts for Brutalist Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind Config for Custom Colors & Fonts -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Toxic neon green accent for brutalist/sporty feel
+                        accent: '#CEFF00',
+                        dark: '#09090b',
+                    },
+                    fontFamily: {
+                        display: ['Anton', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Custom CSS to force B&W images as requested */
+        .img-brutal {
+            filter: grayscale(100%) contrast(120%);
+            transition: filter 0.3s ease;
+        }
+        .img-brutal:hover {
+            filter: grayscale(0%) contrast(110%);
+        }
+        .text-outline {
+            color: transparent;
+            -webkit-text-stroke: 1px #CEFF00;
+        }
+    </style>
+</head>
+<body class="bg-dark text-white font-body overflow-x-hidden selection:bg-accent selection:text-black">
+
+    <!-- 1. ГЛАВНЫЙ ЭКРАН (ОФФЕР) -->
+    <header class="relative min-h-screen flex items-center justify-center pt-20 pb-12 border-b border-zinc-800">
+        <!-- B&W Background Image with Overlay -->
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop" 
+                 onerror="this.onerror=null; this.src='https://placehold.co/2070x1080/09090b/CEFF00?text=BACKGROUND';"
+                 alt="Workout Background" 
+                 class="w-full h-full object-cover img-brutal opacity-40">
+            <div class="absolute inset-0 bg-gradient-to-t from-dark via-dark/80 to-transparent"></div>
+        </div>
+
+        <div class="container mx-auto px-6 relative z-10 text-center max-w-5xl mt-12">
+            <div class="inline-block bg-accent text-black font-bold px-4 py-1 mb-6 tracking-widest uppercase text-sm">
+                Изоляционный фитнес-лагерь
+            </div>
+            <h1 class="font-display text-6xl md:text-8xl lg:text-9xl uppercase leading-[0.9] tracking-tight mb-8">
+                ШТУРМ: Твои 7 дней <br>
+                <span class="text-accent">без права на ошибку</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-zinc-300 max-w-3xl mx-auto font-semibold leading-relaxed mb-12">
+                Ты не сорвешься, потому что у тебя не будет выбора. Загородный дом, полная изоляция, жесткий режим и команда, которая идет до конца.
+            </p>
+            <a href="#pricing" class="inline-block bg-accent hover:bg-white text-black font-display text-2xl uppercase px-12 py-5 transition-colors duration-300 transform hover:scale-105">
+                Принять вызов
+            </a>
+        </div>
+    </header>
+
+    <!-- 2. БЛОК «ДЛЯ КОГО ЭТО» -->
+    <section class="py-24 relative">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col lg:flex-row gap-16 items-center">
+                <div class="w-full lg:w-1/2">
+                    <h2 class="font-display text-5xl md:text-7xl uppercase leading-none mb-8">
+                        Для тех, кто <br>
+                        <span class="text-outline">перепробовал всё</span><br>
+                        и сдался
+                    </h2>
+                    <div class="w-24 h-2 bg-accent mb-8"></div>
+                    <p class="text-zinc-400 text-xl mb-6 leading-relaxed">
+                        Хватит обманывать себя абонементами в фитнес-клуб, куда ты ходишь дважды в месяц. Хватит начинать "с понедельника" и срываться в пятницу.
+                    </p>
+                    <p class="text-zinc-400 text-xl leading-relaxed">
+                        Эта программа создана для тех, кому нужен радикальный разрыв шаблона. Мы бьем в боль твоих неэффективных попыток. Здесь старые отговорки не работают.
+                    </p>
+                </div>
+                <!-- B&W image with bright neon accent box -->
+                <div class="w-full lg:w-1/2 relative">
+                    <div class="absolute inset-0 border-4 border-accent translate-x-4 translate-y-4 md:translate-x-8 md:translate-y-8 z-0"></div>
+                    <img src="https://images.unsplash.com/photo-1526506114620-3023e3e26079?q=80&w=2070&auto=format&fit=crop" 
+                         onerror="this.onerror=null; this.src='https://placehold.co/800x1000/09090b/CEFF00?text=FRUSTRATED';"
+                         alt="Frustrated" 
+                         class="w-full h-[500px] object-cover img-brutal relative z-10">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. БЛОК ПРАВИЛ (УСТАВ) -->
+    <section class="py-24 bg-zinc-900 border-y border-zinc-800">
+        <div class="container mx-auto px-6 text-center max-w-4xl">
+            <h2 class="font-display text-5xl md:text-7xl uppercase mb-8">
+                Здесь правит <span class="text-accent">режим</span>,<br> а не твои хочу
+            </h2>
+            <p class="text-xl text-zinc-300 font-semibold uppercase tracking-wider">
+                Жалость к себе останется за порогом базы.
+            </p>
+        </div>
+    </section>
+
+    <!-- 4 & 5. ОПИСАНИЕ И ЕДА (GRID) -->
+    <section class="py-24 relative">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                
+                <!-- Программа -->
+                <div class="group relative overflow-hidden bg-zinc-950 border border-zinc-800 p-8 md:p-12">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 font-display text-9xl">01</div>
+                    <h3 class="font-display text-4xl uppercase mb-6 relative z-10 group-hover:text-accent transition-colors">
+                        Распорядок, который не оставит жиру шансов
+                    </h3>
+                    <p class="text-zinc-400 text-lg relative z-10">
+                        Мы продаем не упражнения. Мы продаем неизбежность результата. Твой день расписан по минутам. Сон, тренировки, восстановление — всё подчинено одной цели.
+                    </p>
+                </div>
+
+                <!-- Еда -->
+                <div class="group relative overflow-hidden bg-zinc-950 border border-zinc-800 p-8 md:p-12">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 font-display text-9xl">02</div>
+                    <h3 class="font-display text-4xl uppercase mb-6 relative z-10 group-hover:text-accent transition-colors">
+                        Топливо для тела, а не еда для удовольствия
+                    </h3>
+                    <p class="text-zinc-400 text-lg relative z-10">
+                        Мы переворачиваем твою психологию пищевого поведения. Никаких читмилов и "вкусняшек". Еда — это ресурс для выживания и строительства новых мышц.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. БЛОК КУРАТОРА -->
+    <section class="py-24 bg-zinc-900 border-y border-zinc-800">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col lg:flex-row-reverse gap-16 items-center">
+                <div class="w-full lg:w-1/2">
+                    <h2 class="font-display text-5xl md:text-7xl uppercase leading-none mb-6">
+                        Я твой контроль <br><span class="text-accent">24/7</span>
+                    </h2>
+                    <div class="w-24 h-2 bg-accent mb-8"></div>
+                    <h3 class="text-white text-2xl font-bold mb-4 uppercase tracking-wide">Главный куратор лагеря</h3>
+                    <p class="text-zinc-400 text-xl mb-6 leading-relaxed">
+                        Ты здесь, потому что твой внутренний стержень дал трещину. Пока ты восстанавливаешь свой, я буду твоим внешним стержнем. 
+                    </p>
+                    <p class="text-zinc-400 text-xl leading-relaxed">
+                        Я не буду тебя жалеть. Я не буду слушать, как ты устал. Моя задача — провести тебя через эту неделю и показать, на что реально способно твое тело, когда мозг перестает его жалеть.
+                    </p>
+                </div>
+                <!-- B&W portrait with brutalist neon frame -->
+                <div class="w-full lg:w-1/2 relative flex justify-center">
+                    <div class="relative w-full max-w-md">
+                        <div class="absolute inset-0 bg-accent translate-x-4 -translate-y-4 md:translate-x-6 md:-translate-y-6 z-0"></div>
+                        <img src="https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=1964&auto=format&fit=crop" 
+                             onerror="this.onerror=null; this.src='https://placehold.co/800x1000/09090b/CEFF00?text=COACH';"
+                             alt="Head Coach" 
+                             class="w-full h-[600px] object-cover img-brutal relative z-10 border border-zinc-800">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. БЛОК ЦЕНЫ И ПРИЗЫВА (CTA) -->
+    <section id="pricing" class="py-32 relative text-center">
+        <div class="absolute inset-0 bg-pattern opacity-5 pointer-events-none"></div>
+        <div class="container mx-auto px-6 relative z-10 max-w-4xl">
+            <h2 class="font-display text-6xl md:text-8xl uppercase mb-12 text-outline">
+                Инвестируй в своё <br><span class="text-accent !text-accent" style="-webkit-text-stroke: 0;">новое отражение</span>
+            </h2>
+            <p class="text-2xl text-zinc-300 mb-12">
+                Это не трата денег. Это вложение в себя, которое окупится железобетонной дисциплиной на всю жизнь.
+            </p>
+            <button onclick="alert('Модальное окно бронирования (интеграция по необходимости)')" class="inline-block bg-accent hover:bg-white text-black font-display text-3xl uppercase px-16 py-6 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-[0_20px_0_0_rgba(206,255,0,0.3)]">
+                Забронировать место
+            </button>
+            <p class="mt-6 text-sm text-zinc-600 uppercase tracking-widest">Количество мест строго ограничено</p>
+        </div>
+    </section>
+
+    <footer class="py-8 bg-black text-center border-t border-zinc-900">
+        <p class="text-zinc-600 font-display uppercase tracking-widest text-sm">© 2026 ШТУРМ CAMP. Все права защищены.</p>
+    </footer>
+
+</body>
+</html>

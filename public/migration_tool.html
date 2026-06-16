@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mothership CMS Migration Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-10 font-mono">
+    <div class="max-w-2xl mx-auto border border-gray-700 bg-black p-8 rounded-xl shadow-lg">
+        <h1 class="text-2xl text-cyan-400 mb-4">🚀 Phase 2: Firestore Migration Seeder</h1>
+        <p class="mb-6 text-gray-400">Run this locally to push your legacy <code>data.js</code> arrays into the new Firebase Headless CMS. Ensure your Firestore Security Rules allow writes for this operation.</p>
+        
+        <button id="seedBtn" class="bg-cyan-500 hover:bg-cyan-400 text-gray-900 font-bold py-3 px-6 rounded-lg transition-colors">
+            Initiate Data Upload
+        </button>
+        
+        <div id="log" class="mt-8 p-4 bg-gray-900 border border-gray-800 rounded text-sm h-64 overflow-y-auto whitespace-pre-wrap font-mono text-emerald-400">System Ready... Waiting for execution.</div>
+    </div>
+
+    <!-- 1. Load Legacy Data -->
+    <script src="./data.js"></script>
+
+    <!-- 2. Firebase V11 Modular Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // ⚠️ INJECT YOUR MOTHERSHIP FIREBASE CONFIG HERE:
+        const firebaseConfig = {
+            // apiKey: "...",
+            // authDomain: "...",
+            // projectId: "nicksaperov-portfolio",
+            // etc...
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const logEl = document.getElementById('log');
+        const log = (msg) => { logEl.textContent += `\n> ${msg}`; console.log(msg); };
+
+        document.getElementById('seedBtn').addEventListener('click', async () => {
+            try {
+                log("Initializing transmission sequence...");
+                
+                // --- MIGRATE PROJECTS ---
+                if (typeof projectsData !== 'undefined') {
+                    log(`Detected ${projectsData.length} projects. Commencing upload...`);
+                    for (const project of projectsData) {
+                        const docRef = doc(db, 'artifacts', 'nicksaperov-portfolio', 'public', 'data', 'projects', project.id);
+                        await setDoc(docRef, project);
+                        log(`[SUCCESS] Project synced: ${project.id}`);
+                    }
+                }
+
+                // --- MIGRATE ARTICLES ---
+                if (typeof articlesData !== 'undefined') {
+                    log(`Detected ${articlesData.length} articles. Commencing upload...`);
+                    for (const article of articlesData) {
+                        // Use existing ID, or slugify the title as a fallback ID
+                        const docId = article.id || article.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                        const docRef = doc(db, 'artifacts', 'nicksaperov-portfolio', 'public', 'data', 'articles', docId);
+                        await setDoc(docRef, { id: docId, ...article });
+                        log(`[SUCCESS] Article synced: ${docId}`);
+                    }
+                }
+
+                log("\n✅ ARCHITECTURE PIVOT COMPLETE.");
+                log("You may now safely delete data.js from your local repository.");
+            } catch (error) {
+                log(`\n❌ CRITICAL ERROR: ${error.message}`);
+            }
+        });
+    </script>
+</body>
+</html>

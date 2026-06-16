@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edge Publisher (Projects): nicksaperov.xyz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { background-color: #0a0a0f; color: #e2e8f0; font-family: monospace; }
+        .glass-panel { background: rgba(17, 17, 26, 0.9); border: 1px solid rgba(34, 211, 238, 0.3); }
+        .neon-text { color: #22d3ee; text-shadow: 0 0 8px rgba(34, 211, 238, 0.4); }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div class="glass-panel w-full max-w-3xl p-8 rounded-xl shadow-[0_0_30px_rgba(34,211,238,0.1)]">
+        <div class="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
+            <h1 class="text-2xl font-bold neon-text"><i class="fa-solid fa-microchip mr-3"></i>MOTHERSHIP UPLINK (PROJECTS)</h1>
+            <span class="text-xs bg-cyan-400/10 text-cyan-400 px-2 py-1 rounded border border-cyan-400/20">TARGET: /artifacts/nicksaperov-portfolio/public/data/projects</span>
+        </div>
+
+        <div class="mb-6 space-y-3 p-4 border border-purple-500/30 bg-purple-500/10 rounded-lg">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-purple-400 font-bold text-sm"><i class="fa-solid fa-shield-halved mr-2"></i>ADMIN AUTHENTICATION</h3>
+                <span class="text-xs text-gray-500"><i class="fa-solid fa-key mr-1"></i>Local Keystore Active</span>
+            </div>
+            <div class="flex gap-4">
+                <input type="email" id="admin-email" placeholder="Admin Email (e.g., nick@nicksaperov.xyz)" class="w-1/2 bg-black border border-gray-700 p-3 rounded text-white font-mono text-sm focus:outline-none focus:border-purple-500">
+                <input type="password" id="admin-pass" placeholder="Password" class="w-1/2 bg-black border border-gray-700 p-3 rounded text-white font-mono text-sm focus:outline-none focus:border-purple-500">
+            </div>
+        </div>
+
+        <div id="status-console" class="bg-black border border-gray-800 p-4 rounded h-48 overflow-y-auto mb-6 text-sm text-gray-400 space-y-2 font-mono">
+            <div class="text-cyan-400">> PAYLOAD LOADED: EdgeCRM</div>
+            <div>> СИСТЕМА ИНИЦИАЛИЗИРОВАНА.</div>
+            <div>> Требуется аутентификация администратора перед развертыванием полезной нагрузки...</div>
+        </div>
+
+        <button id="deploy-btn" class="w-full bg-cyan-500/20 hover:bg-cyan-400 hover:text-black text-cyan-400 border border-cyan-400 font-bold py-4 rounded transition-all flex justify-center items-center gap-3">
+            <i class="fa-solid fa-rocket"></i> ИНИЦИИРОВАТЬ РАЗВЕРТЫВАНИЕ (DEPLOY)
+        </button>
+    </div>
+
+    <script type="module">
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Your exact existing configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCK2nTz6xHoaYPRUmUyFXpu7-l9u1Hilug",
+            authDomain: "nicksaperov-portfolio-2026.firebaseapp.com",
+            projectId: "nicksaperov-portfolio-2026",
+            storageBucket: "nicksaperov-portfolio-2026.firebasestorage.app",
+            messagingSenderId: "769848303631",
+            appId: "1:769848303631:web:d58ca6fef3b687b520c37a"
+        };
+
+        const log = (msg, type = 'info') => {
+            const consoleEl = document.getElementById('status-console');
+            const color = type === 'error' ? 'text-red-400' : (type === 'success' ? 'text-green-400' : 'text-gray-400');
+            consoleEl.innerHTML += `<div class="${color}">> ${msg}</div>`;
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        };
+
+        // Auto-fill credentials from local browser storage
+        const savedEmail = localStorage.getItem('edge_admin_email');
+        const savedPass = localStorage.getItem('edge_admin_pass');
+        if (savedEmail) document.getElementById('admin-email').value = savedEmail;
+        if (savedPass) document.getElementById('admin-pass').value = savedPass;
+
+        // Formatted Project Payload matching the App.jsx schema for EdgeCRM
+        const projectPayload = {
+            id: "edgecrm",
+            title: "EdgeCRM: Serverless Workspace Native CRM",
+            tagEn: "Cloud Architecture | Micro-SaaS",
+            tagRu: "Облачная Архитектура | Micro-SaaS",
+            descEn: "A bi-directional, zero-infrastructure serverless CRM operating natively within Google Chat Space.",
+            descRu: "Двунаправленная бессерверная CRM-система, работающая нативно в пространстве Google Chat.",
+            tags: ["Google Apps Script", "GCP", "Google Chat API", "Next.js", "Webhooks"],
+            icon: "fa-solid fa-network-wired",
+            color: "emerald",
+            liveLink: "", 
+            contentEn: `
+                <h3>📌 Executive Summary</h3>
+                <p>Traditional CRMs mandate context switching, expensive subscriptions, and complex API overhead for inbound lead management. EdgeCRM solves this structural inefficiency by routing lead pipelines directly into a Google Chat Space. The result is a bi-directional, zero-build serverless ecosystem that allows for immediate client communication directly from the native workspace environment.</p>
+                
+                <h3>🤖 Technical Architecture</h3>
+                <p><strong>Ingress (Web to Chat):</strong> The frontend captures lead data via Next.js and dispatches a POST payload to a Google Apps Script Web App gateway. This edge router pushes the payload to a Google Chat Space via a Webhook (<code>UrlFetchApp</code>). Crucially, state is maintained by mapping the lead's email to the Chat Thread ID within the <code>PropertiesService</code> cache.</p>
+                <p><strong>Egress (Chat to Email):</strong> The response mechanism functions as a deployed Google Workspace Chat Add-on. When an operator replies to the lead's thread utilizing the <code>@CRM [message]</code> command, the <code>onMessage</code> event is triggered. The system retrieves the cached email and dispatches a native SMTP reply directly to the client via <code>GmailApp</code>.</p>
+                
+                <h3>🛡️ Enterprise Security Routing</h3>
+                <p>This architecture maintains a strict zero-infrastructure footprint by completely bypassing traditional SQL/NoSQL databases and server runtimes, utilizing native Workspace APIs instead. Furthermore, the deployment required navigating and bypassing rigorous cross-account OAuth firewall restrictions imposed by Chrome OS Flex and Google Workspace Admin Consoles. This was successfully executed by configuring Domain-Wide GCP App Trust rules.</p>
+            `,
+            contentRu: `
+                <h3>📌 Executive Summary</h3>
+                <p>Традиционные CRM-системы требуют постоянного переключения контекста, дорогостоящих подписок и сложной интеграции API для управления входящими лидами. EdgeCRM решает эту структурную проблему, маршрутизируя потоки лидов напрямую в рабочее пространство Google Chat. Результатом является двунаправленная бессерверная экосистема, не требующая развертывания инфраструктуры и позволяющая мгновенно общаться с клиентами прямо из нативной рабочей среды.</p>
+                
+                <h3>🤖 Technical Architecture</h3>
+                <p><strong>Ingress (Входящий поток):</strong> Фронтенд на Next.js собирает данные лидов и отправляет POST-запрос на шлюз Google Apps Script Web App. Этот пограничный маршрутизатор передает полезную нагрузку в пространство Google Chat через Webhook (<code>UrlFetchApp</code>). Ключевой момент: состояние поддерживается путем привязки email клиента к ID ветки чата (Thread ID) в кэше <code>PropertiesService</code>.</p>
+                <p><strong>Egress (Исходящий поток):</strong> Механизм ответа функционирует как развернутое дополнение Google Workspace Chat Add-on. Когда оператор отвечает в ветке лида, используя команду <code>@CRM [сообщение]</code>, инициируется событие <code>onMessage</code>. Система извлекает кэшированный email и отправляет нативный SMTP-ответ клиенту напрямую через <code>GmailApp</code>.</p>
+                
+                <h3>🛡️ Enterprise Security Routing</h3>
+                <p>Данная архитектура сохраняет строгий подход "zero-infrastructure" (нулевая инфраструктура), полностью обходя традиционные базы данных SQL/NoSQL и серверные среды, вместо этого используя нативные API Workspace. Кроме того, развертывание потребовало обхода жестких ограничений межсетевого экрана OAuth для разных аккаунтов, установленных Chrome OS Flex и консолями администратора Google Workspace. Это было успешно реализовано путем настройки правил доверия приложениям (App Trust rules) на уровне домена в GCP.</p>
+            `
+        };
+
+        document.getElementById('deploy-btn').addEventListener('click', async () => {
+            const email = document.getElementById('admin-email').value.trim();
+            const pass = document.getElementById('admin-pass').value.trim();
+
+            if (!email || !pass) {
+                log('СИСТЕМНАЯ ОШИБКА: Отсутствуют учетные данные.', 'error');
+                return;
+            }
+
+            log('Инициализация процесса деплоя...');
+            
+            try {
+                const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+                const auth = getAuth(app);
+                const db = getFirestore(app);
+
+                log('Верификация администратора...');
+                await signInWithEmailAndPassword(auth, email, pass);
+                const user = auth.currentUser;
+                
+                log(`Доступ разрешен. Идентификатор: ${user.uid.substring(0, 6)}...`, 'success');
+
+                const appId = 'nicksaperov-portfolio'; 
+                const projectRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'projects'), projectPayload.id);
+
+                log(`Отправка полезной нагрузки по пути: public/data/projects/${projectPayload.id}...`);
+                
+                await setDoc(projectRef, {
+                    ...projectPayload,
+                    date: new Date().toISOString(),
+                    timestamp: serverTimestamp()
+                });
+
+                // Save credentials to local storage only upon successful deployment
+                localStorage.setItem('edge_admin_email', email);
+                localStorage.setItem('edge_admin_pass', pass);
+
+                log('ПРОЕКТ УСПЕШНО РАЗВЕРНУТ В FIREBASE!', 'success');
+                
+                document.getElementById('deploy-btn').innerHTML = '<i class="fa-solid fa-check"></i> УСПЕШНО (DEPLOYED)';
+                document.getElementById('deploy-btn').classList.replace('text-cyan-400', 'text-green-400');
+                document.getElementById('deploy-btn').classList.replace('border-cyan-400', 'border-green-400');
+
+            } catch (error) {
+                console.error(error);
+                log(`ОТКАЗ ДОСТУПА: ${error.message}`, 'error');
+            }
+        });
+    </script>
+</body>
+</html>
