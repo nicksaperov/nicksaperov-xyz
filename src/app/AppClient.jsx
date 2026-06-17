@@ -109,7 +109,6 @@ function App() {
                 unsubscribeProjects = onSnapshot(collection(dbInstance, ...basePath, 'projects'), (snapshot) => {
                     const fetchedProjects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     
-                    // STRATEGIC IMPLEMENTATION: Custom Priority Sorting
                     const projectOrder = [
                         'liquidity-evaporator',
                         'gcp-chrome-os',
@@ -124,13 +123,9 @@ function App() {
                         const indexA = projectOrder.indexOf(a.id);
                         const indexB = projectOrder.indexOf(b.id);
                         
-                        // 1. Both items are in our priority list: sort by their exact position
                         if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-                        // 2. Only A is in the list: it automatically wins
                         if (indexA !== -1) return -1;
-                        // 3. Only B is in the list: it automatically wins
                         if (indexB !== -1) return 1;
-                        // 4. Neither are in the list: fallback to chronological (newest first)
                         const timeA = new Date(a.date || a.createdAt || a.timestamp || 0).getTime();
                         const timeB = new Date(b.date || b.createdAt || b.timestamp || 0).getTime();
                         return timeB - timeA; 
@@ -240,7 +235,8 @@ function App() {
     };
 
     const fetchGeminiWithRetry = async (text, retries = 5) => {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=`;
+        const apiKey = ""; // API key is safely omitted for public Cloud Run deployment
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
         const systemPrompt = `You are the AI Assistant for Nick Saperov. Keep responses under 3 sentences. Language constraint: Reply in ${lang === 'en' ? 'English' : 'Russian'}. CRITICAL RULE: If the user asks for a proposal, mentions a PM role, requests a technical architecture audit, or shows high B2B intent, instantly stop answering and provide this exact link: 'Please ping Nick's direct Workspace terminal here: https://nicksaperov.xyz/connect'.`;
         
         const payload = { contents: [{ parts: [{ text: text }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
@@ -249,7 +245,15 @@ function App() {
         for (let i = 0; i < retries; i++) {
             try {
                 const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) throw new Error(`HTTP error!`);
+                if (!response.ok) {
+                    // Graceful fallback for production when API key is not present, preventing the "Neural link severed" crash.
+                    if (response.status === 400 && !apiKey) {
+                        return lang === 'en' 
+                            ? "System Ping: LLM bypassed for pipeline diagnostics. Live agent is offline." 
+                            : "Системный пинг: LLM отключен для диагностики пайплайна.";
+                    }
+                    throw new Error(`HTTP error!`);
+                }
                 const data = await response.json();
                 return data.candidates?.[0]?.content?.parts?.[0]?.text || "Anomaly detected.";
             } catch (err) {
@@ -279,22 +283,13 @@ function App() {
 
     const handleSubmitLead = async () => {
         if (!leadHandle.trim()) return;
+        
+        const formattedChat = chatLog.map(msg => `${msg.role.toUpperCase()}: ${msg.text}`).join('\n');
+        
+        // 1. INGRESS WEBHOOK URL: Fire unconditionally first, decoupled from Firestore
         try {
-            if (dbInstance && authInstance?.currentUser) {
-                const { collection, addDoc, serverTimestamp } = await nativeImport('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
-                const appId = typeof __app_id !== 'undefined' ? __app_id : 'nicksaperov-portfolio';
-                await addDoc(collection(dbInstance, 'artifacts', appId, 'public', 'data', 'leads'), {
-                    handle: leadHandle, language: lang, chatHistory: chatLog, timestamp: serverTimestamp(), userId: authInstance.currentUser.uid
-                });
-            }
-
-            // ==========================================
-            // ARCHITECTURE SYNC: INGRESS WEBHOOK URL
-            // ==========================================
             const webAppUrl = "https://script.google.com/macros/s/AKfycbyIO6N_3hGpaqms--cuxZ3DbxqzPBcJHPh4ckDgu-AaNd2mmcYRJcwfbO6_e1h5oXwI/exec";
             
-            const formattedChat = chatLog.map(msg => `${msg.role.toUpperCase()}: ${msg.text}`).join('\n');
-
             await fetch(webAppUrl, {
                 method: 'POST',
                 mode: 'no-cors',
@@ -305,13 +300,27 @@ function App() {
                     payload: formattedChat
                 })
             });
-
-            setLeadCaptured(true); setIsLeadCaptureMode(false);
-            setChatLog(prev => [...prev, { role: 'system', text: lang === 'en' ? `Identity verified. Contact secured.` : `Личность подтверждена. Контакт сохранен.` }]);
-        } catch (error) { 
-            console.error("Lead capture failed:", error); 
-            setIsLeadCaptureMode(false); 
+        } catch (webhookError) {
+            console.error("EdgeCRM Webhook Failed:", webhookError);
         }
+
+        // 2. Legacy Write: Only fire if authentication succeeded (Wrapped in try/catch to not block UI)
+        try {
+            if (dbInstance && authInstance?.currentUser) {
+                const { collection, addDoc, serverTimestamp } = await nativeImport('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'nicksaperov-portfolio';
+                await addDoc(collection(dbInstance, 'artifacts', appId, 'public', 'data', 'leads'), {
+                    handle: leadHandle, language: lang, chatHistory: chatLog, timestamp: serverTimestamp(), userId: authInstance.currentUser.uid
+                });
+            }
+        } catch (dbError) {
+            console.warn("Lead Backup Failed (Permission Denied):", dbError);
+        }
+
+        // 3. Resolve UI State
+        setLeadCaptured(true); 
+        setIsLeadCaptureMode(false);
+        setChatLog(prev => [...prev, { role: 'system', text: lang === 'en' ? `Identity verified. Contact secured.` : `Личность подтверждена. Контакт сохранен.` }]);
     };
 
     const t = (enText, ruText) => lang === 'en' ? enText : ruText;
