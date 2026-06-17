@@ -649,13 +649,13 @@ function App() {
                             <div key={idx} className="text-center my-4 animate-fade-in"><div className="inline-block bg-purple-500/10 border border-purple-500/30 text-purple-400 px-4 py-2 rounded text-xs font-mono shadow-[0_0_10px_rgba(168,85,247,0.1)]"><i className="fa-solid fa-shield-halved mr-2"></i>{msg.text}</div></div>
                         ) : (
                             <div key={idx} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} mt-4`}>
-                                <span className={`${msg.role === 'user' ? 'text-gray-500' : 'text-cyan-400'} mb-1 text-[10px]`}>{msg.role === 'user' ? 'USER >' : 'AI >'}</span>
+                                <span className={`${msg.role === 'user' ? 'text-gray-500' : 'text-cyan-400'} mb-1 text-[10px]`}>{msg.role === 'user' ? 'USER &gt;' : 'AI &gt;'}</span>
                                 <div className={`${msg.role === 'user' ? 'bg-gray-800 rounded-l-lg rounded-br-lg text-white' : 'bg-[#11111a] rounded-r-lg rounded-bl-lg text-gray-300'} border border-gray-700 p-3`} dangerouslySetInnerHTML={{ __html: msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>') }} />
                             </div>
                         )
                     ))}
                     {isTyping && (
-                        <div className="flex flex-col items-start mt-4"><span className="text-cyan-400 mb-1 text-[10px]">AI ></span><div className="bg-[#11111a] border border-gray-700 p-3 rounded-r-lg rounded-bl-lg text-gray-500 flex gap-1"><span className="animate-bounce">.</span><span className="animate-bounce" style={{animationDelay: '0.2s'}}>.</span><span className="animate-bounce" style={{animationDelay: '0.4s'}}>.</span></div></div>
+                        <div className="flex flex-col items-start mt-4"><span className="text-cyan-400 mb-1 text-[10px]">AI &gt;</span><div className="bg-[#11111a] border border-gray-700 p-3 rounded-r-lg rounded-bl-lg text-gray-500 flex gap-1"><span className="animate-bounce">.</span><span className="animate-bounce" style={{animationDelay: '0.2s'}}>.</span><span className="animate-bounce" style={{animationDelay: '0.4s'}}>.</span></div></div>
                     )}
                     <div ref={chatEndRef} />
                 </div>
