@@ -1,5 +1,45 @@
 {
   "projects": {
     "default": "nicksaperov-portfolio-2026"
-  }
+  },
+  "targets": {
+    "nicksaperov-portfolio-2026": {
+      "hosting": {
+        "mothership": [
+          "nicksaperov-portfolio-2026"
+        ],
+        "economics": [
+          "nicksaperov-economics"
+        ],
+        "ampersound": [
+          "ampersound"
+        ],
+        "btrfly": [
+          "btrfly"
+        ],
+        "cornflower": [
+          "cornflower"
+        ],
+        "genesislogic": [
+          "genesislogic-xyz-app"
+        ],
+        "quant": [
+          "quant-nicksaperov"
+        ],
+        "dash-dao": [
+          "saperov-dash-dao"
+        ],
+        "sundragontree": [
+          "sundragontree-art-app"
+        ],
+        "vietnam-hotel": [
+          "vietnam-hotel"
+        ],
+        "woodypecker": [
+          "woodypecker-app"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

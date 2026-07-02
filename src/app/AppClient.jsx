@@ -35,7 +35,6 @@ function App() {
     const [articlesData, setArticlesData] = useState([]);
     const [isDataLoading, setIsDataLoading] = useState(true);
 
-    const [userMessageCount, setUserMessageCount] = useState(0);
     const [isLeadCaptureMode, setIsLeadCaptureMode] = useState(false);
     const [leadHandle, setLeadHandle] = useState('');
     const [leadCaptured, setLeadCaptured] = useState(false);
@@ -122,7 +121,6 @@ function App() {
                     fetchedProjects.sort((a, b) => {
                         const indexA = projectOrder.indexOf(a.id);
                         const indexB = projectOrder.indexOf(b.id);
-                        
                         if (indexA !== -1 && indexB !== -1) return indexA - indexB;
                         if (indexA !== -1) return -1;
                         if (indexB !== -1) return 1;
@@ -234,61 +232,58 @@ function App() {
         });
     };
 
-    const fetchGeminiWithRetry = async (text, retries = 5) => {
-        const apiKey = ""; // API key is safely omitted for public Cloud Run deployment
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-        const systemPrompt = `You are the AI Assistant for Nick Saperov. Keep responses under 3 sentences. Language constraint: Reply in ${lang === 'en' ? 'English' : 'Russian'}. CRITICAL RULE: If the user asks for a proposal, mentions a PM role, requests a technical architecture audit, or shows high B2B intent, instantly stop answering and provide this exact link: 'Please ping Nick's direct Workspace terminal here: https://nicksaperov.xyz/connect'.`;
+    const fetchGeminiWithRetry = async (text) => {
+        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || "";
         
-        const payload = { contents: [{ parts: [{ text: text }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
-        let delay = 1000;
-        
-        for (let i = 0; i < retries; i++) {
-            try {
-                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) {
-                    // Graceful fallback for production when API key is not present, preventing the "Neural link severed" crash.
-                    if (response.status === 400 && !apiKey) {
-                        return lang === 'en' 
-                            ? "System Ping: LLM bypassed for pipeline diagnostics. Live agent is offline." 
-                            : "Системный пинг: LLM отключен для диагностики пайплайна.";
-                    }
-                    throw new Error(`HTTP error!`);
-                }
-                const data = await response.json();
-                return data.candidates?.[0]?.content?.parts?.[0]?.text || "Anomaly detected.";
-            } catch (err) {
-                if (i === retries - 1) return "System Error: Neural link severed.";
-                await new Promise(res => setTimeout(res, delay)); delay *= 2;
-            }
+        if (!apiKey) {
+            return "System Ping: LLM API key omitted in production. Agent running in deterministic fallback mode.";
+        }
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: text }] }] })
+            });
+            const data = await response.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || "System Error: Invalid LLM response.";
+        } catch (error) {
+            console.error("LLM Error:", error);
+            return "System Error: Neural link severed.";
         }
     };
 
     const handleSendMessage = async () => {
         if (!chatInput.trim()) return;
-        const userText = chatInput.trim(); setChatInput('');
+        const userText = chatInput.trim(); 
+        setChatInput('');
+        
         const newChatLog = [...chatLog, { role: 'user', text: userText }];
-        setChatLog(newChatLog); setIsTyping(true);
-        setUserMessageCount(prev => prev + 1);
+        setChatLog(newChatLog); 
+        setIsTyping(true);
 
         const aiResponse = await fetchGeminiWithRetry(userText);
-        setIsTyping(false); setChatLog([...newChatLog, { role: 'ai', text: aiResponse }]);
+        setIsTyping(false); 
+        setChatLog([...newChatLog, { role: 'ai', text: aiResponse }]);
 
-        if (userMessageCount + 1 === 3 && !leadCaptured) {
+        if (!leadCaptured) {
             setTimeout(() => {
                 setIsLeadCaptureMode(true);
-                setChatLog(prev => [...prev, { role: 'system', text: lang === 'en' ? "SYSTEM ALERT: Please authenticate via Email or Telegram handle." : "СИСТЕМНОЕ УВЕДОМЛЕНИЕ: Пожалуйста, авторизуйтесь через Email или Telegram." }]);
-            }, 1500);
+                setChatLog(prev => [...prev, { 
+                    role: 'system', 
+                    text: lang === 'en' ? "SYSTEM ALERT: Please authenticate via Email or Telegram handle." : "СИСТЕМНОЕ УВЕДОМЛЕНИЕ: Пожалуйста, авторизуйтесь через Email или Telegram."
+                }]);
+            }, 1000);
         }
     };
 
     const handleSubmitLead = async () => {
         if (!leadHandle.trim()) return;
-        
         const formattedChat = chatLog.map(msg => `${msg.role.toUpperCase()}: ${msg.text}`).join('\n');
         
-        // 1. INGRESS WEBHOOK URL: Fire unconditionally first, decoupled from Firestore
         try {
-            const webAppUrl = "https://script.google.com/macros/s/AKfycbyIO6N_3hGpaqms--cuxZ3DbxqzPBcJHPh4ckDgu-AaNd2mmcYRJcwfbO6_e1h5oXwI/exec";
+            // CRITICAL: Replace this with your new Google Apps Script Web App URL!
+            const webAppUrl = "https://script.google.com/macros/s/AKfycbyr5cRd7htgaA13xSvyVEkXXNdyWVK9BR1Ps0fdx2RkSAfEjj1q2iNWIm85EWyUEtez/exec";
             
             await fetch(webAppUrl, {
                 method: 'POST',
@@ -304,8 +299,23 @@ function App() {
             console.error("EdgeCRM Webhook Failed:", webhookError);
         }
 
-        // 2. Legacy Write: Only fire if authentication succeeded (Wrapped in try/catch to not block UI)
         try {
+            // UNCONDITIONAL WRITE: This writes to the root leads collection to trigger the Cloud Function Webhook
+            if (dbInstance) {
+                const { collection, addDoc, serverTimestamp } = await nativeImport('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
+                await addDoc(collection(dbInstance, 'leads'), {
+                    name: "AI Terminal Lead",
+                    email: leadHandle,
+                    message: formattedChat,
+                    timestamp: serverTimestamp()
+                });
+            }
+        } catch (webhookError) {
+            console.error("EdgeCRM Trigger Failed:", webhookError);
+        }
+
+        try {
+            // BACKUP WRITE: This only fires if the browser allowed anonymous auth
             if (dbInstance && authInstance?.currentUser) {
                 const { collection, addDoc, serverTimestamp } = await nativeImport('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js');
                 const appId = typeof __app_id !== 'undefined' ? __app_id : 'nicksaperov-portfolio';
@@ -314,10 +324,9 @@ function App() {
                 });
             }
         } catch (dbError) {
-            console.warn("Lead Backup Failed (Permission Denied):", dbError);
+            console.warn("Legacy Backup Failed:", dbError);
         }
 
-        // 3. Resolve UI State
         setLeadCaptured(true); 
         setIsLeadCaptureMode(false);
         setChatLog(prev => [...prev, { role: 'system', text: lang === 'en' ? `Identity verified. Contact secured.` : `Личность подтверждена. Контакт сохранен.` }]);
@@ -544,7 +553,7 @@ function App() {
                 <div className="lg:col-span-8">
                     <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-xs font-mono text-purple-400 border border-purple-500 rounded-full bg-purple-500/10">
                         <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span></span>
-                        {t('WRITING IN REAL-TIME', 'ПИШУ В РЕАЛЬНОМ ВРЕМЕНИ')}
+                        {t('WRITING IN REAL-TIME', 'ПИШУ В REAL-TIME')}
                     </div>
                     <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">{t('The Bounded Rationality of Decentralization', 'Ограниченная Рациональность Децентрализации')}</h2>
                     <p className="text-xl text-gray-300 font-light mb-8 italic">{t("Bridging Herbert Simon's theories with modern On-Chain Mechanisms.", "Объединение теорий Герберта Саймона с современными On-Chain механизмами.")}</p>
@@ -564,7 +573,7 @@ function App() {
                 <div className="lg:col-span-4">
                     <div className="glass-panel p-6 rounded-xl sticky top-28 neon-border-purple">
                         <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2"><i className="fa-solid fa-bolt text-purple-400 text-xl"></i> {t('Fuel the Synthesis', 'Поддержать Синтез')}</h3>
-                        <p className="text-sm text-gray-400 mb-6">{t('Support the open-source dissemination of this book via the channels below.', 'Поддержите открытое распространение, через каналы ниже.')}</p>
+                        <p className="text-sm text-gray-400 mb-6">{t('Support the open-source dissemination of this book via the channels below.', 'Поддержите открытое распространение этой книги через каналы ниже.')}</p>
                         <div className="space-y-4">
                             <div className="bg-[#0a0a0f] border border-gray-800 p-4 rounded-lg">
                                 <div className="flex items-center gap-3 mb-2"><i className="fa-brands fa-ethereum text-cyan-400"></i><span className="font-mono text-sm text-gray-300 font-bold">Web3 / Ethereum</span></div>
@@ -674,13 +683,13 @@ function App() {
                             <div key={idx} className="text-center my-4 animate-fade-in"><div className="inline-block bg-purple-500/10 border border-purple-500/30 text-purple-400 px-4 py-2 rounded text-xs font-mono shadow-[0_0_10px_rgba(168,85,247,0.1)]"><i className="fa-solid fa-shield-halved mr-2"></i>{msg.text}</div></div>
                         ) : (
                             <div key={idx} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} mt-4`}>
-                                <span className={`${msg.role === 'user' ? 'text-gray-500' : 'text-cyan-400'} mb-1 text-[10px]`}>{msg.role === 'user' ? 'USER &gt;' : 'AI &gt;'}</span>
+                                <span className={`${msg.role === 'user' ? 'text-gray-500' : 'text-cyan-400'} mb-1 text-[10px]`}>{msg.role === 'user' ? 'USER >' : 'AI >'}</span>
                                 <div className={`${msg.role === 'user' ? 'bg-gray-800 rounded-l-lg rounded-br-lg text-white' : 'bg-[#11111a] rounded-r-lg rounded-bl-lg text-gray-300'} border border-gray-700 p-3`} dangerouslySetInnerHTML={{ __html: msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>') }} />
                             </div>
                         )
                     ))}
                     {isTyping && (
-                        <div className="flex flex-col items-start mt-4"><span className="text-cyan-400 mb-1 text-[10px]">AI &gt;</span><div className="bg-[#11111a] border border-gray-700 p-3 rounded-r-lg rounded-bl-lg text-gray-500 flex gap-1"><span className="animate-bounce">.</span><span className="animate-bounce" style={{animationDelay: '0.2s'}}>.</span><span className="animate-bounce" style={{animationDelay: '0.4s'}}>.</span></div></div>
+                        <div className="flex flex-col items-start mt-4"><span className="text-cyan-400 mb-1 text-[10px]">AI {'>'}</span><div className="bg-[#11111a] border border-gray-700 p-3 rounded-r-lg rounded-bl-lg text-gray-500 flex gap-1"><span className="animate-bounce">.</span><span className="animate-bounce" style={{animationDelay: '0.2s'}}>.</span><span className="animate-bounce" style={{animationDelay: '0.4s'}}>.</span></div></div>
                     )}
                     <div ref={chatEndRef} />
                 </div>
