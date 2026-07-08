@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Menu, X, Globe, Plus, ArrowRight, Mail, MapPin, Shield, Trash2, ArrowLeft, Upload, Loader2, LogOut } from 'lucide-react';
 
-// --- FIREBASE ARCHITECTURE ---
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
@@ -27,17 +26,107 @@ const storage = getStorage(app);
 const COLLECTION_PATH = 'artifacts/ampersound/public/data/products';
 const STORAGE_FOLDER = 'ampersound-media';
 
-// --- DICTIONARY ---
 const CONTENT_DICTIONARY = {
   ru: {
     nav: { about: "О нас", creator: "Создатель", philosophy: "Философия", products: "Производство", projects: "Инсталляции", contact: "Контакты" },
     hero: { title: "AmperSound", subtitle: "Чистый. Мощный. Объемный звук.", slogan: "Музыка, которая объединяет.", cta: "Изучить Архитектуру" },
-    about: { tag: "Философия", title: "Архитектура Звука", p1: "Мощные акустические системы по индивидуальному заказу для клубов, открытых площадок и концертных залов. Для тех, кто ценит чистый, разборчивый звук.", p2: "Мы специализируемся на разработке архитектурных акустических систем, создаваемых с учетом уникальных особенностей каждого пространства. Наш подход основан на глубокой интеграции акустических решений в промышленный дизайн.", p3: "Каждая система разрабатывается индивидуально: от расчетов и подбора излучателей до проектирования формы корпуса. Решения, которые органично дополняют и усиливают пространство.", cta: "Узнать больше о философии" },
+    about: { tag: "Философия", title: "Архитектура Звука", p1: "Мощные акустические системы по индивидуальному заказу для клубов, открытых площадок и концертных залов.", p2: "Мы специализируемся на разработке архитектурных акустических систем, создаваемых с учетом уникальных особенностей каждого пространства. Наш подход основан на глубокой интеграции акустических решений в промышленный дизайн.", p3: "Каждая система разрабатывается индивидуально: от расчетов и подбора излучателей до проектирования формы корпуса.", cta: "Узнать больше о философии" },
     creator: { tag: "Визионер", title: "Виталий Супрун", dates: "1955 . 2021", p1: "Звуковые станции Ampersound собраны по формуле великого физика Супруна Виталия Григорьевича. Разработчик электроники для космической отрасли, он посвятил себя созданию идеального звука.", p2: "Осознав потребность общества в качественном звучании, он открыл лабораторию для создания уникальных саунд-станций: Ampersound.", p3: "«Музыка — это гармонические колебания воздуха, которым мы дышим.» Мы продолжаем его путь, строго соблюдая формулы и совершенствуя качество сборки.", cta: "Изучить Наследие" },
     projects: { tag: "Реализованные", title: "Инсталляции", p1: "От концептуальных арт-пространств до массивных опен-эйров. Наши системы работают там, где требуется бескомпромиссное качество.", p2: "Ampersound: Часть искусства и технологии." },
     footer: { contact: "Свяжитесь с нами", email: "info@ampersound.pro", location: "Москва, Россия", rights: "© 2026 AmperSound. Все права защищены." }
   }
 };
+
+const INITIAL_PRODUCTS = [
+  {
+    id: "chandelier",
+    name: "Акустические люстры",
+    category: "Архитектурные",
+    desc: "Акустические люстры Ampersound усовершенствованного поколения. Собраны для ресторана “Gussi“ на Красной Поляне. Решение, объединяющее мощный звук и стильное освещение. Полностью круговая диаграмма направленности в 360°.",
+    specs: "3x 8″ (200Вт) | 3x 1″ (50Вт) | 360°",
+    power: "750",
+    dimensions: "Индивидуальные",
+    price: "По запросу",
+    img: "/33.jpeg"
+  },
+  {
+    id: "sub-hst",
+    name: "Сабвуфер HST",
+    category: "Сабвуферы",
+    desc: "Технология Hybrid Slot Transmission (HST) сочетает эффективность щелевого фазоинвертора и оптимизированную конструкцию воздушного канала. Глубокий и насыщенный бас при компактных габаритах.",
+    specs: "18″ НЧ | 26-400 Гц | 130 дБ | 8 Ом",
+    power: "1200",
+    dimensions: "Компакт",
+    price: "По запросу",
+    img: "/21.jpeg"
+  },
+  {
+    id: "white-4way",
+    name: "White 4-Way",
+    category: "Системы",
+    desc: "Новый четырёхполосный комплект активного разделения. Выполнен в белом цвете с фосфорным покрытием. Сабвуферы Transmission Line, сателлиты с 15” мидбасовым драйвером и компрессионный рупор.",
+    specs: "18” Сабвуферы | 15” Мидбас | 1.4” ВЧ",
+    power: "14000",
+    dimensions: "Архитектурная сборка",
+    price: "По запросу",
+    img: "/Ampersound white 4way_4.jpg"
+  },
+  {
+    id: "sat-15w",
+    name: "Сателлит A&S (15W+1H)",
+    category: "Активные",
+    desc: "Сателлит активного разделения. Максимальный уровень звукового давления – 136 дБ. Компрессионный ВЧ драйвер с шёлковой диафрагмой. Стальная решётка с порошковым покрытием.",
+    specs: "15″ НЧ | 1″ Твиттер | 48Гц-20кГц | 90°х40°",
+    power: "1800",
+    dimensions: "Custom",
+    price: "По запросу",
+    img: "/23_2.jpeg"
+  },
+  {
+    id: "monitor-12w",
+    name: "Монитор A&S (12W+1H)",
+    category: "Пассивные",
+    desc: "Монитор конструктивно выполнен в виде резонатора Гельмгольца с выходом тоннеля на задней панели. 12-дюймовый широкополосный динамик и кольцевой драйвер с тканевой диафрагмой.",
+    specs: "12″ НЧ | 1″ Твиттер | 62-20000 Гц | 130дБ",
+    power: "900",
+    dimensions: "Custom",
+    price: "По запросу",
+    img: "/36_2.jpg"
+  },
+  {
+    id: "horn-as",
+    name: "Рупор A&S",
+    category: "Рупорные",
+    desc: "Рупор широкодиапазонный свёрнутый компрессионный с мощным драйвером. Драйвер с легчайшей майларовой диафрагмой оптимально нагружен на трактрисный рупор и замкнутый демпфированный объём.",
+    specs: "2″ СЧ | 200Гц-7кГц | 45°х45° | 16 Ом",
+    power: "100",
+    dimensions: "Custom",
+    price: "По запросу",
+    img: "/19_2.jpeg"
+  },
+  {
+    id: "front-fill",
+    name: "Фронт-филл (212+Hi)",
+    category: "Пассивные",
+    desc: "Акустическая система включает два широкополосных 12″ динамика и центральный твиттер. Конструкция корпуса направляет звуковую энергию, минимизируя паразитные отражения от поверхностей.",
+    specs: "2х 12″ ШП | 1.4″ Твиттер | 65Гц-20кГц",
+    power: "700",
+    dimensions: "375x900 мм",
+    price: "По запросу",
+    img: "/12.jpeg"
+  },
+  {
+    id: "sub-tl",
+    name: "Сабвуфер Trans-Line",
+    category: "Сабвуферы",
+    desc: "Выполнен в виде трансмиссионной линии в прямоугольном корпусе. Позволяет существенно расширить диапазон в область самых низких частот и достичь высочайшего давления без резонансов.",
+    specs: "18″ НЧ | 26-400 Гц | 130 дБ | 8 Ом",
+    power: "2000",
+    dimensions: "Custom",
+    price: "По запросу",
+    img: "/27.jpeg"
+  }
+];
 
 // --- UTILS ---
 const ScrollToTop = () => {
@@ -46,7 +135,6 @@ const ScrollToTop = () => {
   return null;
 };
 
-// --- COMPONENTS ---
 const Navbar = ({ lang, setLang, t, user }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -78,7 +166,7 @@ const Navbar = ({ lang, setLang, t, user }) => {
           <Link to="/projects" className="hover:text-yellow-500 transition-colors">{t.nav.projects}</Link>
           
           {user && (
-             <Link to="/admin" className="flex items-center gap-1 text-yellow-600 hover:text-yellow-500 transition-colors ml-2 font-black">
+             <Link to="/admin" className="flex items-center gap-1 text-yellow-600 hover:text-yellow-500 transition-colors ml-2 font-black bg-yellow-500/10 px-3 py-1 rounded">
                <Shield size={16} /> CMS
              </Link>
           )}
@@ -103,6 +191,46 @@ const Navbar = ({ lang, setLang, t, user }) => {
         </div>
       )}
     </nav>
+  );
+};
+
+const ProductGrid = ({ products, title, tag, showAllLink = false }) => {
+  const navigate = useNavigate();
+  return (
+    <div className="w-full">
+      {(title || tag) && (
+        <div className="text-center mb-16">
+          {tag && <p className="text-yellow-600 tracking-widest uppercase text-xs font-bold mb-4">{tag}</p>}
+          {title && <h2 className="text-4xl md:text-5xl font-light text-zinc-900 tracking-tight">{title}</h2>}
+        </div>
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+        {products.map((item) => (
+          <div key={item.id} onClick={() => navigate(`/product/${item.id}`)} className="group cursor-pointer flex flex-col h-full bg-white border border-zinc-100 hover:shadow-2xl transition-all duration-500 rounded-sm">
+            <div className="p-8 mb-6 flex-grow flex items-center justify-center overflow-hidden bg-zinc-50">
+              <img src={item.img} alt={item.name} className="max-h-72 object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-700" />
+            </div>
+            <div className="p-6 pt-0 flex justify-between items-start mt-auto">
+              <div>
+                <span className="text-[10px] font-bold tracking-widest uppercase text-yellow-600 block mb-2">{item.category}</span>
+                <h3 className="text-lg font-bold text-zinc-900 mb-2">{item.name}</h3>
+                <p className="text-sm text-zinc-500 font-light line-clamp-2 leading-relaxed">{item.desc}</p>
+              </div>
+              <button className="text-zinc-300 group-hover:text-yellow-500 transition-colors p-2 mt-2 ml-4 flex-shrink-0 bg-zinc-50 rounded-full group-hover:bg-yellow-50">
+                <Plus size={20} strokeWidth={2} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {showAllLink && (
+        <div className="mt-16 flex justify-center">
+          <Link to="/production" className="inline-flex items-center gap-3 border border-zinc-300 text-zinc-900 px-8 py-4 rounded-sm hover:border-yellow-500 hover:text-yellow-600 transition-colors font-medium text-sm tracking-widest uppercase">
+            Смотреть все системы <ArrowRight size={16} />
+          </Link>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -131,35 +259,7 @@ const Footer = ({ t }) => (
   </footer>
 );
 
-const ArchitectureSection = ({ t }) => {
-  return (
-    <section id="architecture" className="py-24 md:py-40 bg-zinc-900 text-white">
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-        <div>
-          <p className="text-yellow-500 tracking-widest uppercase text-xs font-bold mb-4">{t.projects.tag}</p>
-          <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-8">
-            {t.projects.title}
-          </h2>
-          <div className="space-y-6 text-zinc-400 font-light leading-relaxed">
-            <p>{t.projects.p1}</p>
-            <p className="text-white font-medium border-l-2 border-yellow-500 pl-4">{t.projects.p2}</p>
-          </div>
-          <Link to="/projects" className="mt-10 inline-flex items-center gap-3 border border-zinc-700 text-zinc-300 px-8 py-4 hover:border-yellow-500 hover:text-yellow-500 transition-all duration-300 font-bold">
-            <span className="text-sm tracking-widest uppercase">Смотреть инсталляции</span>
-            <ArrowRight size={16} />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 gap-6">
-          <div className="mt-12"><img src="/30.jpeg" alt="Architecture" className="w-full h-auto object-cover shadow-lg hover:scale-[1.02] transition-transform duration-700" /></div>
-          <div><img src="/16.jpeg" alt="Forest System" className="w-full h-auto object-cover shadow-lg hover:scale-[1.02] transition-transform duration-700" /></div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// --- PAGES ---
-const HomePage = ({ t }) => (
+const HomePage = ({ t, displayProducts }) => (
   <div className="animate-in fade-in duration-700">
     <section className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-zinc-900">
       <div className="absolute inset-0 z-0">
@@ -197,7 +297,19 @@ const HomePage = ({ t }) => (
       </div>
     </section>
 
-    <section className="py-24 md:py-40 bg-white">
+    {/* RESTORED: Top 3 Products Grid on Home Page */}
+    <section className="py-24 md:py-40 bg-white border-t border-zinc-100">
+      <div className="max-w-7xl mx-auto px-6">
+        <ProductGrid 
+          products={displayProducts.slice(0, 3)} 
+          title="Флагманские Системы" 
+          tag="Готовые Решения" 
+          showAllLink={true} 
+        />
+      </div>
+    </section>
+
+    <section className="py-24 md:py-40 bg-zinc-50 border-t border-zinc-100">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
         <div>
           <p className="text-yellow-600 tracking-widest uppercase text-xs font-bold mb-4">{t.creator.tag}</p>
@@ -212,7 +324,26 @@ const HomePage = ({ t }) => (
       </div>
     </section>
 
-    <ArchitectureSection t={t} />
+    <section id="architecture" className="py-24 md:py-40 bg-zinc-900 text-white">
+      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+        <div>
+          <p className="text-yellow-500 tracking-widest uppercase text-xs font-bold mb-4">{t.projects.tag}</p>
+          <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-8">{t.projects.title}</h2>
+          <div className="space-y-6 text-zinc-400 font-light leading-relaxed">
+            <p>{t.projects.p1}</p>
+            <p className="text-white font-medium border-l-2 border-yellow-500 pl-4">{t.projects.p2}</p>
+          </div>
+          <Link to="/projects" className="mt-10 inline-flex items-center gap-3 border border-zinc-700 text-zinc-300 px-8 py-4 hover:border-yellow-500 hover:text-yellow-500 transition-all duration-300 font-bold">
+            <span className="text-sm tracking-widest uppercase">Смотреть инсталляции</span>
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 gap-6">
+          <div className="mt-12"><img src="/30.jpeg" alt="Architecture" className="w-full h-auto object-cover shadow-lg hover:scale-[1.02] transition-transform duration-700" /></div>
+          <div><img src="/16.jpeg" alt="Forest System" className="w-full h-auto object-cover shadow-lg hover:scale-[1.02] transition-transform duration-700" /></div>
+        </div>
+      </div>
+    </section>
   </div>
 );
 
@@ -359,9 +490,8 @@ const ProjectsPage = () => {
         </p>
       </div>
       
-      {/* Masonry Layout for Projects Gallery */}
       <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-        {['1.jpeg', '2.jpeg', '3.jpeg', '5.jpeg', '10.jpeg', '17.jpeg', '23.jpeg', '35.jpg'].map((src, i) => (
+        {['1.jpeg', '2.jpeg', '3.jpeg', '5.jpeg', '10.jpeg', '17.jpeg', '23_2.jpeg', '35.jpg'].map((src, i) => (
           <img 
             key={i} 
             src={`/${src}`} 
@@ -374,60 +504,72 @@ const ProjectsPage = () => {
   );
 };
 
+/* RESTORED: Full Production Page displaying all cards */
 const ProductionPage = ({ products }) => {
-  const navigate = useNavigate();
   return (
     <div className="pt-32 pb-24 max-w-7xl mx-auto px-6 min-h-screen animate-in fade-in duration-700">
-      <Link to="/" className="flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-zinc-400 hover:text-yellow-600 mb-12 transition-colors"><ArrowLeft size={16} /> На главную</Link>
+      <Link to="/" className="flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-zinc-400 hover:text-yellow-600 mb-12 transition-colors">
+        <ArrowLeft size={16} /> На главную
+      </Link>
       <div className="mb-16 max-w-3xl">
         <span className="text-[10px] font-bold tracking-widest uppercase text-yellow-600 border border-yellow-600 px-3 py-1 rounded-full">Кастомное производство</span>
         <h1 className="text-4xl md:text-6xl font-light text-zinc-900 mt-6 mb-6 tracking-tight">Акустические Системы</h1>
-        <p className="text-lg font-light text-zinc-600 leading-relaxed">Мы не просто продаем колонки. Мы разрабатываем кастомные архитектурные акустические решения под конкретные задачи площадки, будь то клуб, ресторан или концертный зал. Ниже представлены примеры наших серийных и индивидуальных разработок.</p>
+        <p className="text-lg font-light text-zinc-600 leading-relaxed">
+          Мы не просто продаем колонки. Мы разрабатываем кастомные архитектурные акустические решения под конкретные задачи площадки, будь то клуб, ресторан или концертный зал. Ниже представлены примеры наших серийных и индивидуальных разработок.
+        </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-        {products.map((item) => (
-          <div key={item.id} onClick={() => navigate(`/product/${item.id}`)} className="group cursor-pointer flex flex-col h-full bg-white border border-zinc-100 hover:shadow-2xl transition-all duration-500 rounded-sm">
-            <div className="p-8 mb-6 flex-grow flex items-center justify-center overflow-hidden bg-zinc-50">
-              <img src={item.img} alt={item.name} className="max-h-72 object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-700" />
-            </div>
-            <div className="p-6 pt-0 flex justify-between items-start mt-auto">
-              <div>
-                <span className="text-[10px] font-bold tracking-widest uppercase text-yellow-600 block mb-2">{item.category}</span>
-                <h3 className="text-lg font-bold text-zinc-900 mb-2">{item.name}</h3>
-                <p className="text-sm text-zinc-500 font-light line-clamp-2 leading-relaxed">{item.desc}</p>
-              </div>
-              <button className="text-zinc-300 group-hover:text-yellow-500 transition-colors p-2 mt-2 ml-4 flex-shrink-0 bg-zinc-50 rounded-full group-hover:bg-yellow-50"><Plus size={20} strokeWidth={2} /></button>
-            </div>
-          </div>
-        ))}
-      </div>
+      
+      <ProductGrid products={products} />
     </div>
   );
 };
 
+/* RESTORED: Detailed Product Page */
 const ProductDetailPage = ({ products }) => {
-  const { id } = useLocation().pathname.split('/').slice(-1)[0] ? {id: useLocation().pathname.split('/').slice(-1)[0]} : {id: null};
-  const product = products.find(p => p.id === id) || products[0];
+  const { id } = useParams();
+  const product = products.find(p => p.id === id);
 
-  if (!product) return <div className="pt-40 text-center">Система не найдена</div>;
+  if (!product) return <div className="pt-40 text-center text-xl font-medium">Система не найдена</div>;
   
   return (
     <div className="pt-32 pb-24 max-w-6xl mx-auto px-6 min-h-screen animate-in fade-in duration-700 bg-white">
-      <Link to="/production" className="flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-zinc-400 hover:text-yellow-600 mb-12 transition-colors"><ArrowLeft size={16} /> К каталогу</Link>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24 items-center">
-        <div className="bg-zinc-50 p-12 flex items-center justify-center shadow-inner border border-zinc-100 aspect-square rounded-sm">
-          <img src={product.img} alt={product.name} className="w-full max-h-full object-contain mix-blend-multiply drop-shadow-2xl" />
+      <Link to="/production" className="flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-zinc-400 hover:text-yellow-600 mb-12 transition-colors">
+        <ArrowLeft size={16} /> К каталогу
+      </Link>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24 items-start">
+        <div className="bg-zinc-50 p-12 flex items-center justify-center shadow-inner border border-zinc-100 rounded-sm sticky top-32">
+          <img src={product.img} alt={product.name} className="w-full h-auto max-h-[600px] object-contain mix-blend-multiply drop-shadow-2xl" />
         </div>
         <div>
           <span className="text-[10px] font-bold tracking-widest uppercase text-yellow-600 border border-yellow-600 px-3 py-1 rounded-full">{product.category}</span>
           <h1 className="text-4xl md:text-5xl font-bold text-zinc-900 mt-6 mb-8 tracking-tight">{product.name}</h1>
           <p className="text-zinc-600 font-light leading-relaxed mb-10 text-lg">{product.desc}</p>
-          <div className="border-t border-zinc-200 pt-8 grid grid-cols-2 gap-8">
-            <div><p className="text-xs font-bold tracking-widest uppercase text-zinc-400 mb-2">Максимальная Мощность</p><p className="text-2xl font-light text-zinc-900">{product.power ? `${product.power} Вт` : 'N/A'}</p></div>
-            <div><p className="text-xs font-bold tracking-widest uppercase text-zinc-400 mb-2">Габариты</p><p className="text-2xl font-light text-zinc-900">{product.dimensions || 'Custom'}</p></div>
+          
+          <div className="border-t border-zinc-200 pt-8 grid grid-cols-2 gap-8 bg-zinc-50 p-6 rounded-sm">
+             <div className="col-span-2">
+               <p className="text-xs font-bold tracking-widest uppercase text-zinc-400 mb-2">Спецификация</p>
+               <p className="text-lg font-medium text-zinc-900">{product.specs || '—'}</p>
+             </div>
+            <div>
+              <p className="text-xs font-bold tracking-widest uppercase text-zinc-400 mb-2">Мощность</p>
+              <p className="text-2xl font-light text-zinc-900">{product.power ? `${product.power} Вт` : 'Конфигурируется'}</p>
+            </div>
+            <div>
+              <p className="text-xs font-bold tracking-widest uppercase text-zinc-400 mb-2">Габариты</p>
+              <p className="text-2xl font-light text-zinc-900">{product.dimensions || 'Custom'}</p>
+            </div>
             {product.price && (
-              <div className="col-span-2"><p className="text-xs font-bold tracking-widest uppercase text-zinc-400 mb-2">Стоимость</p><p className="text-2xl font-medium text-yellow-600">{Number(product.price).toLocaleString('ru-RU')} ₽</p></div>
+              <div className="col-span-2 mt-4 pt-4 border-t border-zinc-200">
+                <p className="text-xs font-bold tracking-widest uppercase text-zinc-400 mb-2">Ориентировочная Стоимость</p>
+                <p className="text-3xl font-medium text-yellow-600">{product.price}</p>
+              </div>
             )}
+          </div>
+
+          <div className="mt-12 flex gap-4">
+             <a href="mailto:info@ampersound.pro" className="inline-flex items-center justify-center gap-3 bg-zinc-900 text-white px-8 py-4 rounded-sm hover:bg-yellow-600 transition-colors font-medium text-sm tracking-widest uppercase w-full">
+               Запросить расчет <ArrowRight size={16} />
+             </a>
           </div>
         </div>
       </div>
@@ -437,7 +579,7 @@ const ProductDetailPage = ({ products }) => {
 
 const AdminCMS = ({ user }) => {
   const [products, setProducts] = useState([]);
-  const [formData, setFormData] = useState({ name: '', category: 'Активные системы', desc: '', power: '', dimensions: '', price: '' });
+  const [formData, setFormData] = useState({ name: '', category: 'Активные системы', desc: '', specs: '', power: '', dimensions: '', price: '' });
   const [imageFile, setImageFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [authForm, setAuthForm] = useState({ email: '', password: '' });
@@ -476,7 +618,7 @@ const AdminCMS = ({ user }) => {
         imagePath = storageRef.fullPath;
       } else { throw new Error("Прикрепите фото."); }
       await setDoc(doc(db, COLLECTION_PATH, newId), { ...formData, img: imageUrl, imagePath: imagePath, updatedAt: new Date().toISOString() });
-      setFormData({ name: '', category: 'Активные системы', desc: '', power: '', dimensions: '', price: '' });
+      setFormData({ name: '', category: 'Активные системы', desc: '', specs: '', power: '', dimensions: '', price: '' });
       setImageFile(null);
       document.getElementById('file-upload').value = '';
     } catch (error) { alert(error.message || "Ошибка при сохранении."); } 
@@ -519,12 +661,13 @@ const AdminCMS = ({ user }) => {
           <form onSubmit={handleSave} className="space-y-5 bg-white p-6 shadow-xl border border-zinc-100 rounded-sm">
             <div><label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Название</label><input required className="w-full p-3 bg-zinc-50 border border-zinc-200 focus:border-yellow-500 outline-none font-medium" value={formData.name} onChange={e=>setFormData({...formData, name: e.target.value})} /></div>
             <div><label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Категория</label><select className="w-full p-3 bg-zinc-50 border border-zinc-200 focus:border-yellow-500 outline-none font-medium" value={formData.category} onChange={e=>setFormData({...formData, category: e.target.value})}><option>Активные системы</option><option>Пассивные системы</option><option>Сабвуферы</option><option>Архитектурные</option><option>Концепты</option></select></div>
-            <div><label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Описание</label><textarea required className="w-full p-3 bg-zinc-50 border border-zinc-200 focus:border-yellow-500 outline-none font-medium h-32 resize-none" value={formData.desc} onChange={e=>setFormData({...formData, desc: e.target.value})} /></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div><label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Описание (Длинный текст)</label><textarea required className="w-full p-3 bg-zinc-50 border border-zinc-200 focus:border-yellow-500 outline-none font-medium h-32 resize-none" value={formData.desc} onChange={e=>setFormData({...formData, desc: e.target.value})} /></div>
+            <div><label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Спецификация (Кратко)</label><input placeholder="Напр: 15″ НЧ | 1″ Твиттер" className="w-full p-3 bg-zinc-50 border border-zinc-200 focus:border-yellow-500 outline-none font-medium" value={formData.specs} onChange={e=>setFormData({...formData, specs: e.target.value})} /></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div><label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Мощность</label><input type="number" placeholder="Вт" className="w-full p-3 bg-zinc-50 border border-zinc-200 focus:border-yellow-500 outline-none font-medium" value={formData.power} onChange={e=>setFormData({...formData, power: e.target.value})} /></div>
               <div><label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Габариты</label><input placeholder="ШxВxГ" className="w-full p-3 bg-zinc-50 border border-zinc-200 focus:border-yellow-500 outline-none font-medium" value={formData.dimensions} onChange={e=>setFormData({...formData, dimensions: e.target.value})} /></div>
-              <div><label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Цена (₽)</label><input type="number" placeholder="Напр. 150000" className="w-full p-3 bg-zinc-50 border border-zinc-200 focus:border-yellow-500 outline-none font-medium" value={formData.price} onChange={e=>setFormData({...formData, price: e.target.value})} /></div>
             </div>
+            <div><label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Цена</label><input placeholder="Напр. По запросу" className="w-full p-3 bg-zinc-50 border border-zinc-200 focus:border-yellow-500 outline-none font-medium" value={formData.price} onChange={e=>setFormData({...formData, price: e.target.value})} /></div>
             <div>
                <label className="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Фотография</label>
                <div className="relative border-2 border-dashed border-zinc-300 bg-zinc-50 p-6 text-center hover:bg-zinc-100 cursor-pointer rounded-sm"><input id="file-upload" type="file" accept="image/*" required className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={(e) => setImageFile(e.target.files[0])} /><div className="flex flex-col items-center"><Upload size={24} className={imageFile ? "text-green-500 mb-2" : "text-zinc-400 mb-2"} /><span className="text-sm font-bold text-zinc-700">{imageFile ? imageFile.name : "Загрузить фото"}</span></div></div>
@@ -573,7 +716,9 @@ export default function App() {
   }, []);
 
   const t = CONTENT_DICTIONARY[lang] || CONTENT_DICTIONARY['en'];
-  const displayProducts = (isDbConnected && dbProducts.length > 0) ? dbProducts : [];
+  
+  // Умный Fallback: Если в базе Firebase пусто, показываем хардкод из INITIAL_PRODUCTS
+  const displayProducts = (isDbConnected && dbProducts.length > 0) ? dbProducts : INITIAL_PRODUCTS;
 
   return (
     <BrowserRouter>
@@ -582,7 +727,7 @@ export default function App() {
         <Navbar lang={lang} setLang={setLang} t={t} user={user} />
         <main>
           <Routes>
-            <Route path="/" element={<HomePage t={t} />} />
+            <Route path="/" element={<HomePage t={t} displayProducts={displayProducts} />} />
             <Route path="/creator" element={<CreatorPage />} />
             <Route path="/philosophy" element={<PhilosophyPage />} />
             <Route path="/projects" element={<ProjectsPage />} />
