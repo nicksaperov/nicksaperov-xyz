@@ -38,7 +38,7 @@ const INITIAL_PRODUCTS = [
     power: "700",
     dimensions: "900x375",
     price: "",
-    img: "/front_2.jpg"
+    img: "/front.jpg"
   },
   {
     id: "sub-hst",
@@ -49,7 +49,7 @@ const INITIAL_PRODUCTS = [
     power: "1200",
     dimensions: "Custom",
     price: "",
-    img: "/Sub1_2.jpeg"
+    img: "/Sub1.jpeg"
   },
   {
     id: "sub-tl",
@@ -60,7 +60,7 @@ const INITIAL_PRODUCTS = [
     power: "1400",
     dimensions: "Custom",
     price: "",
-    img: "/Sub2-2_2.jpeg"
+    img: "/Sub2-2.jpeg"
   },
   {
     id: "sat-15",
@@ -71,7 +71,7 @@ const INITIAL_PRODUCTS = [
     power: "1800",
     dimensions: "Custom",
     price: "",
-    img: "/Sat1_2.jpeg"
+    img: "/Sat1.jpeg"
   },
   {
     id: "monitor",
@@ -82,7 +82,7 @@ const INITIAL_PRODUCTS = [
     power: "900",
     dimensions: "Custom",
     price: "",
-    img: "/Mon1_2.jpeg"
+    img: "/Mon1.jpeg"
   },
   {
     id: "horn",
@@ -93,7 +93,7 @@ const INITIAL_PRODUCTS = [
     power: "100",
     dimensions: "Custom",
     price: "",
-    img: "/Rup1_2.jpeg"
+    img: "/Rup1.jpeg"
   }
 ];
 
