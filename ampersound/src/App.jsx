@@ -28,7 +28,7 @@ const STORAGE_FOLDER = 'ampersound-media';
 
 const CONTENT_DICTIONARY = {
   ru: {
-    nav: { about: "О нас", creator: "Создатель", philosophy: "Философия", products: "Производство", projects: "Инсталляции", contact: "Контакты" },
+    nav: { philosophy: "Философия", sets: "Комплекты", products: "Производство", projects: "Инсталляции", creator: "О Создателе", contact: "Контакты" },
     hero: { title: "AmperSound", subtitle: "Чистый. Мощный. Объемный звук.", slogan: "Музыка, которая объединяет.", cta: "Изучить Архитектуру" },
     about: { tag: "Философия", title: "Архитектура Звука", p1: "Мощные акустические системы по индивидуальному заказу для клубов, открытых площадок и концертных залов.", p2: "Мы специализируемся на разработке архитектурных акустических систем, создаваемых с учетом уникальных особенностей каждого пространства. Наш подход основан на глубокой интеграции акустических решений в промышленный дизайн.", p3: "Каждая система разрабатывается индивидуально: от расчетов и подбора излучателей до проектирования формы корпуса.", cta: "Узнать больше о философии" },
     creator: { tag: "Визионер", title: "Виталий Супрун", dates: "1955 . 2021", p1: "Звуковые станции Ampersound собраны по формуле великого физика Супруна Виталия Григорьевича. Разработчик электроники для космической отрасли, он посвятил себя созданию идеального звука.", p2: "Осознав потребность общества в качественном звучании, он открыл лабораторию для создания уникальных саунд-станций: Ampersound.", p3: "«Музыка — это гармонические колебания воздуха, которым мы дышим.» Мы продолжаем его путь, строго соблюдая формулы и совершенствуя качество сборки.", cta: "Изучить Наследие" },
@@ -161,9 +161,11 @@ const Navbar = ({ lang, setLang, t, user }) => {
 
         <div className={`hidden md:flex items-center gap-8 text-sm tracking-wide font-bold uppercase ${!isDark ? 'text-zinc-800' : 'text-zinc-200'}`}>
           <Link to="/philosophy" className="hover:text-yellow-500 transition-colors">{t.nav.philosophy}</Link>
-          <Link to="/creator" className="hover:text-yellow-500 transition-colors">{t.nav.creator}</Link>
+          {/* TODO: Добавить ссылку на страницу Комплекты, когда она будет создана */}
+          <Link to="/production" className="hover:text-yellow-500 transition-colors">{t.nav.sets}</Link>
           <Link to="/production" className="hover:text-yellow-500 transition-colors">{t.nav.products}</Link>
           <Link to="/projects" className="hover:text-yellow-500 transition-colors">{t.nav.projects}</Link>
+          <Link to="/creator" className="hover:text-yellow-500 transition-colors">{t.nav.creator}</Link>
           
           {user && (
              <Link to="/admin" className="flex items-center gap-1 text-yellow-600 hover:text-yellow-500 transition-colors ml-2 font-black bg-yellow-500/10 px-3 py-1 rounded">
@@ -180,9 +182,11 @@ const Navbar = ({ lang, setLang, t, user }) => {
       {isOpen && (
         <div className="absolute top-full left-0 w-full bg-white shadow-lg py-6 px-6 flex flex-col gap-6 md:hidden border-t border-zinc-100">
           <Link to="/philosophy" onClick={() => setIsOpen(false)} className="text-zinc-900 text-lg font-medium">{t.nav.philosophy}</Link>
-          <Link to="/creator" onClick={() => setIsOpen(false)} className="text-zinc-900 text-lg font-medium">{t.nav.creator}</Link>
+           {/* TODO: Добавить ссылку на страницу Комплекты, когда она будет создана */}
+          <Link to="/production" onClick={() => setIsOpen(false)} className="text-zinc-900 text-lg font-medium">{t.nav.sets}</Link>
           <Link to="/production" onClick={() => setIsOpen(false)} className="text-zinc-900 text-lg font-medium">{t.nav.products}</Link>
           <Link to="/projects" onClick={() => setIsOpen(false)} className="text-zinc-900 text-lg font-medium">{t.nav.projects}</Link>
+          <Link to="/creator" onClick={() => setIsOpen(false)} className="text-zinc-900 text-lg font-medium">{t.nav.creator}</Link>
           {user && (
             <Link to="/admin" onClick={() => setIsOpen(false)} className="text-yellow-600 text-lg font-medium flex items-center gap-2">
               <Shield size={20} /> CMS Admin
@@ -309,26 +313,13 @@ const HomePage = ({ t, displayProducts }) => (
       </div>
     </section>
 
-    <section className="py-24 md:py-40 bg-zinc-50 border-t border-zinc-100">
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-        <div>
-          <p className="text-yellow-600 tracking-widest uppercase text-xs font-bold mb-4">{t.creator.tag}</p>
-          <h2 className="text-4xl md:text-5xl font-light text-zinc-900 tracking-tight mb-2">{t.creator.title}</h2>
-          <p className="text-zinc-400 tracking-widest text-sm mb-8 font-medium">{t.creator.dates}</p>
-          <div className="space-y-6 text-zinc-600 font-light leading-relaxed"><p>{t.creator.p1}</p><p className="pl-6 border-l-4 border-yellow-500 italic text-zinc-800 font-medium">{t.creator.p3}</p></div>
-          <Link to="/creator" className="mt-10 inline-flex items-center gap-3 bg-zinc-900 text-white px-8 py-4 rounded-sm hover:bg-yellow-600 transition-colors font-medium text-sm tracking-widest uppercase">
-            {t.creator.cta} <ArrowRight size={16} />
-          </Link>
-        </div>
-        <div><img src="/22.jpeg" alt="Vitaly" className="w-full h-auto object-cover shadow-2xl rounded-sm grayscale hover:grayscale-0 transition-all duration-700" /></div>
-      </div>
-    </section>
-
     <section id="architecture" className="py-24 md:py-40 bg-zinc-900 text-white">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
         <div>
           <p className="text-yellow-500 tracking-widest uppercase text-xs font-bold mb-4">{t.projects.tag}</p>
-          <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-8">{t.projects.title}</h2>
+          <h2 className="text-4xl md:text-5xl font-light tracking-tight mb-8">
+            {t.projects.title}
+          </h2>
           <div className="space-y-6 text-zinc-400 font-light leading-relaxed">
             <p>{t.projects.p1}</p>
             <p className="text-white font-medium border-l-2 border-yellow-500 pl-4">{t.projects.p2}</p>
@@ -342,6 +333,21 @@ const HomePage = ({ t, displayProducts }) => (
           <div className="mt-12"><img src="/30.jpeg" alt="Architecture" className="w-full h-auto object-cover shadow-lg hover:scale-[1.02] transition-transform duration-700" /></div>
           <div><img src="/16.jpeg" alt="Forest System" className="w-full h-auto object-cover shadow-lg hover:scale-[1.02] transition-transform duration-700" /></div>
         </div>
+      </div>
+    </section>
+
+    <section className="py-24 md:py-40 bg-zinc-50 border-t border-zinc-100">
+      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+        <div>
+          <p className="text-yellow-600 tracking-widest uppercase text-xs font-bold mb-4">{t.creator.tag}</p>
+          <h2 className="text-4xl md:text-5xl font-light text-zinc-900 tracking-tight mb-2">{t.creator.title}</h2>
+          <p className="text-zinc-400 tracking-widest text-sm mb-8 font-medium">{t.creator.dates}</p>
+          <div className="space-y-6 text-zinc-600 font-light leading-relaxed"><p>{t.creator.p1}</p><p className="pl-6 border-l-4 border-yellow-500 italic text-zinc-800 font-medium">{t.creator.p3}</p></div>
+          <Link to="/creator" className="mt-10 inline-flex items-center gap-3 bg-zinc-900 text-white px-8 py-4 rounded-sm hover:bg-yellow-600 transition-colors font-medium text-sm tracking-widest uppercase">
+            {t.creator.cta} <ArrowRight size={16} />
+          </Link>
+        </div>
+        <div><img src="/22.jpeg" alt="Vitaly" className="w-full h-auto object-cover shadow-2xl rounded-sm grayscale hover:grayscale-0 transition-all duration-700" /></div>
       </div>
     </section>
   </div>
