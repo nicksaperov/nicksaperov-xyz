@@ -38,7 +38,7 @@ const INITIAL_PRODUCTS = [
     power: "700",
     dimensions: "900x375",
     price: "",
-    img: "/front.jpg"
+    img: "/front_2.jpg"
   },
   {
     id: "sub-hst",
@@ -49,7 +49,7 @@ const INITIAL_PRODUCTS = [
     power: "1200",
     dimensions: "Custom",
     price: "",
-    img: "/Sub1.jpeg"
+    img: "/Sub1_2.jpeg"
   },
   {
     id: "sub-tl",
@@ -60,7 +60,7 @@ const INITIAL_PRODUCTS = [
     power: "1400",
     dimensions: "Custom",
     price: "",
-    img: "/Sub2-2.jpeg"
+    img: "/Sub2-2_2.jpeg"
   },
   {
     id: "sat-15",
@@ -71,7 +71,7 @@ const INITIAL_PRODUCTS = [
     power: "1800",
     dimensions: "Custom",
     price: "",
-    img: "/Sat1.jpeg"
+    img: "/Sat1_2.jpeg"
   },
   {
     id: "monitor",
@@ -82,7 +82,7 @@ const INITIAL_PRODUCTS = [
     power: "900",
     dimensions: "Custom",
     price: "",
-    img: "/Mon1.jpeg"
+    img: "/Mon1_2.jpeg"
   },
   {
     id: "horn",
@@ -93,7 +93,7 @@ const INITIAL_PRODUCTS = [
     power: "100",
     dimensions: "Custom",
     price: "",
-    img: "/Rup1.jpeg"
+    img: "/Rup1_2.jpeg"
   }
 ];
 
@@ -109,8 +109,11 @@ const CONTENT_DICTIONARY = {
     productionArticles: [
       {
         id: "custom-dev",
-        text: "РАЗРАБОТКА АКУСТИЧЕСКИХ СИСТЕМ\n\nМы специализируемся на разработке архитектурных акустических систем, создаваемых с учётом уникальных особенностей каждого пространства. Наш подход основан на глубокой интеграции акустических решений в промышленный дизайн и архитектуру объекта.\n\nМы выполняем проектирование и изготовление индивидуальных корпусов, полностью адаптированных под:\n• архитектуру помещения,\n• интерьерные и конструктивные ограничения,\n• требования к направленности и распределению звука,\n• акустические задачи конкретного объекта.\n\nКаждая система разрабатывается индивидуально, от акустических расчётов и подбора излучателей до проектирования формы корпуса и способов интеграции в пространство. Мы создаём решения, которые не нарушают архитектурную концепцию, а органично дополняют и усиливают её.",
-        media: ["prod_main.jpg", "production2.mp4"]
+        // Текст разделен логически для особой верстки внутри компонента ProductionPage
+        textPart1: "РАЗРАБОТКА АКУСТИЧЕСКИХ СИСТЕМ\n\nМы специализируемся на разработке архитектурных акустических систем, создаваемых с учётом уникальных особенностей каждого пространства. Наш подход основан на глубокой интеграции акустических решений в промышленный дизайн и архитектуру объекта.",
+        textPart2: "Мы выполняем проектирование и изготовление индивидуальных корпусов, полностью адаптированных под:\n• архитектуру помещения,\n• интерьерные и конструктивные ограничения,\n• требования к направленности и распределению звука,\n• акустические задачи конкретного объекта.\n\nКаждая система разрабатывается индивидуально, от акустических расчётов и подбора излучателей до проектирования формы корпуса и способов интеграции в пространство. Мы создаём решения, которые не нарушают архитектурную концепцию, а органично дополняют и усиливают её.",
+        mediaMain: "prod_main.jpg",
+        mediaVideo: "production2.mp4"
       },
       {
         id: 4,
@@ -145,7 +148,7 @@ const CONTENT_DICTIONARY = {
       {
         id: 7,
         text: "Новый четырёхполосный комплект активного разделения Ampersound white 4way 🔊\nСистема построена на:\n— 18” сабвуферах Transmission Line по 1200 Вт RMS \n— сателлитах с 15” мидбасовым драйвером 1000 Вт RMS\n— 1.4” ВЧ драйвере мощностью 200 Вт\n— рупорной секции с компрессионным драйвером.\nКомплект выполнен в белом цвете с фосфорным покрытием.\nВ ближайшее время система будет дополнена ещё двумя 18” сабвуферами для ещё более мощного и глубокого низа.",
-        media: ["Ampersound white 4way_4.jpg", "prod4.jpg", "33.jpeg"]
+        media: ["prod4.jpg"] // Убрана битая фотка
       }
     ]
   }
@@ -484,9 +487,9 @@ const PhilosophyPage = () => {
               Мы создаём системы, которые не нарушают архитектурную концепцию, а органично дополняют и усиливают её.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <img src="/34.jpg" alt="Процесс сборки" className="w-full h-full object-cover rounded-sm shadow-sm" />
-            <img src="/Ampersound white 4way_4.jpg" alt="Детали системы" className="w-full h-full object-cover rounded-sm shadow-sm mt-8" />
+          <div className="grid grid-cols-1 gap-4">
+            {/* Оставлена только одна фотка, как приказано, и растянута для красоты */}
+            <img src="/34.jpg" alt="Процесс сборки" className="w-full h-auto max-h-[500px] object-cover rounded-sm shadow-sm" />
           </div>
         </div>
       </div>
@@ -518,7 +521,8 @@ const ProjectsPage = () => {
       </div>
       
       <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-        {['1.jpeg', '2.jpeg', '3.jpeg', '5.jpeg', '10.jpeg', '17.jpeg', '23.jpeg', '35.jpg'].map((src, i) => (
+        {/* Убрали файл 2.jpeg из массива инсталляций по приказу */}
+        {['1.jpeg', '3.jpeg', '5.jpeg', '10.jpeg', '17.jpeg', '23.jpeg', '35.jpg'].map((src, i) => (
           <img 
             key={i} 
             src={`/${src}`} 
@@ -609,22 +613,42 @@ const ProductionPage = ({ articles }) => {
       </div>
       
       <div className="space-y-16">
-        {articles.map((article) => (
-          <div key={article.id} className="bg-white p-8 md:p-10 rounded-sm shadow-md border border-zinc-100 transition-all hover:shadow-lg">
-            <p className="whitespace-pre-wrap text-zinc-700 font-light leading-relaxed text-lg mb-8">{article.text}</p>
-            {article.media && article.media.length > 0 && (
-              <div className={`grid gap-4 ${article.media.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                {article.media.map((mediaSrc, idx) => (
-                  mediaSrc.toLowerCase().endsWith('.mp4') ? (
-                    <video key={idx} src={`/${mediaSrc}`} controls playsInline className="w-full h-auto rounded-sm shadow-sm object-cover max-h-[500px] bg-zinc-900"></video>
-                  ) : (
-                    <img key={idx} src={`/${mediaSrc}`} alt="AmperSound Production" className="w-full h-auto rounded-sm shadow-sm object-cover max-h-[500px]" />
-                  )
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+        {articles.map((article) => {
+          // СПЕЦИАЛЬНАЯ ВЕРСТКА ДЛЯ СТАТЬИ "CUSTOM-DEV" (Разработка Акустических Систем)
+          if (article.id === 'custom-dev') {
+             return (
+               <div key={article.id} className="bg-white p-8 md:p-10 rounded-sm shadow-md border border-zinc-100 transition-all hover:shadow-lg">
+                  <p className="whitespace-pre-wrap text-zinc-700 font-light leading-relaxed text-lg mb-8">{article.textPart1}</p>
+                  
+                  {/* Крупное фото по центру */}
+                  <img src={`/${article.mediaMain}`} alt="Production overview" className="w-full max-w-2xl mx-auto h-auto rounded-sm shadow-md object-cover mb-8" />
+                  
+                  <p className="whitespace-pre-wrap text-zinc-700 font-light leading-relaxed text-lg mb-8">{article.textPart2}</p>
+                  
+                  {/* Видео на всю ширину */}
+                  <video src={`/${article.mediaVideo}`} controls playsInline className="w-full h-auto rounded-sm shadow-md object-cover bg-zinc-900"></video>
+               </div>
+             )
+          }
+
+          // СТАНДАРТНАЯ ВЕРСТКА ДЛЯ ВСЕХ ОСТАЛЬНЫХ СТАТЕЙ
+          return (
+            <div key={article.id} className="bg-white p-8 md:p-10 rounded-sm shadow-md border border-zinc-100 transition-all hover:shadow-lg">
+              <p className="whitespace-pre-wrap text-zinc-700 font-light leading-relaxed text-lg mb-8">{article.text}</p>
+              {article.media && article.media.length > 0 && (
+                <div className={`grid gap-4 ${article.media.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                  {article.media.map((mediaSrc, idx) => (
+                    mediaSrc.toLowerCase().endsWith('.mp4') ? (
+                      <video key={idx} src={`/${mediaSrc}`} controls playsInline className="w-full h-auto rounded-sm shadow-sm object-cover max-h-[500px] bg-zinc-900"></video>
+                    ) : (
+                      <img key={idx} src={`/${mediaSrc}`} alt="AmperSound Production" className="w-full h-auto rounded-sm shadow-sm object-cover max-h-[500px]" />
+                    )
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
     </div>
   );
